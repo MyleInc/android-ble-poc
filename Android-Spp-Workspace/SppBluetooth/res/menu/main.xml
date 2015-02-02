@@ -1,0 +1,36 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item 
+        android:icon="@drawable/ic_action_overflow"
+        android:showAsAction="always"
+        android:title="">
+        <menu> 
+		    <item
+		        android:id="@+id/action_start_stop"
+		        android:title="@string/main_ac_stop_spp"
+		        android:showAsAction="never"/>
+		    
+		    <item
+		        android:id="@+id/action_clear"
+		        android:title="@string/main_ac_clear_log"
+		        android:showAsAction="never"/>
+		    
+		    <item
+		        android:id="@+id/action_en_bloc"
+		        android:title="@string/main_ac_en_bloc"
+		        android:showAsAction="never"/>
+		    
+		    <item
+		        android:id="@+id/action_dis_bloc"
+		        android:title="@string/main_ac_dis_bloc"
+		        android:showAsAction="never"/>
+		    
+		    <item
+		        android:id="@+id/action_location"
+		        android:title="@string/main_ac_location"
+		        android:showAsAction="never"/>
+        </menu>
+    </item>
+    
+
+</menu>

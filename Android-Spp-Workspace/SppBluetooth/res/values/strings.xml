@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">SPP</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="main_ac_clear_log">Clear Log</string>
+    <string name="main_ac_start_spp">Start SPP</string>
+    <string name="main_ac_stop_spp">Stop SPP</string>
+    <string name="main_ac_location">Location</string>
+    <string name="main_ac_en_bloc">Enable Bloc</string>
+     <string name="main_ac_dis_bloc">Disable Bloc</string>
+
+</resources>
