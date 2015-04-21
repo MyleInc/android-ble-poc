@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView 
+    android:layout_width="match_parent" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent">
+    <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:focusable="true"
+    android:focusableInTouchMode="true" >
+    
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/RECLN"/>
+	    <EditText 
+	        android:id="@+id/ed_recln"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/PAUSE_LEVEL"/>
+	    <EditText 
+	        android:id="@+id/ed_pause_level"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/PAUSE_LEN"/>
+	    <EditText 
+	        android:id="@+id/ed_pause_len"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/ACCELER_SENS"/>
+	    <EditText 
+	        android:id="@+id/ed_acceler_sens"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/MIC"/>
+	    <EditText 
+	        android:id="@+id/ed_mic"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/PASSWORD"/>
+	    <EditText 
+	        android:id="@+id/ed_password"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/BTLOC"/>
+	    <EditText 
+	        android:id="@+id/ed_btloc"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/UUID"/>
+	    <EditText 
+	        android:id="@+id/ed_uuid"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    
+	    <TextView 
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.3"
+	        android:text="@string/VERSION"/>
+	    <EditText 
+	        android:id="@+id/ed_version"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight="0.7"/>
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal"
+	    android:gravity="right">
+	    
+	    <Button 
+	        android:id="@+id/bt_read_all"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/read_all"
+	        android:onClick="clickReadAll"/>
+
+	    <Button 
+	        android:id="@+id/bt_write_all"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/write_all"
+	        android:onClick="clickWriteAll"/>
+	</LinearLayout>
+	
+</LinearLayout>
+    
+</ScrollView>

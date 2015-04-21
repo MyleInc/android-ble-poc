@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+   	<item
+        android:id="@+id/action_clear"
+        android:title="@string/log_ac_clear_log"
+        android:showAsAction="always"/>
+   	
+   	<item
+        android:id="@+id/action_parameter"
+        android:enabled="true"
+        android:title="@string/log_ac_parameter"
+        android:showAsAction="always"/>
+   	
+	<item
+		android:id="@+id/action_forget_device"
+		android:title="@string/log_ac_forget_device"
+		android:showAsAction="always"/>
+
+</menu>
