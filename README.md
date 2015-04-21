@@ -13,7 +13,10 @@ A simple program to communicate with board.
     
         Bugs:
         
-        "BluetoothGatt.connectGatt(Context context, boolean autoConnect, BluetoothGattCallback callback)" always has status is 133 (GATT_ERROR).
+        + "BluetoothGatt.connectGatt(Context context, boolean autoConnect, BluetoothGattCallback callback)" always has status is 133 (GATT_ERROR).
+
+        + Maybe TI firmware doesn't support Android 5.0.
+    
     
 2. Max speed: 300 bytes/second
 
