@@ -73,6 +73,7 @@ public class ScanActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		mListDevice.clear();
+		mAdapter.notifyDataSetChanged();
 		mMyleService.stopScan();
 		Intent intent = new Intent(ScanActivity.this, MyleService.class);
 		stopService(intent);
@@ -100,6 +101,7 @@ public class ScanActivity extends Activity {
         		mMyleService.stopScan();
         		item.setTitle(R.string.scan_ac_start_scan);
         		mListDevice.clear();
+        		mAdapter.notifyDataSetChanged();
         		mIsScanning = false;
         	} else {
         		mMyleService.startScan();
