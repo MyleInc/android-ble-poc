@@ -1,5 +1,7 @@
 package com.example.myle;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -263,7 +265,7 @@ public class MyleService extends Service {
 		return name;
 	}
 	
-	// Save file into sdcard
+	/* Save file into sdcard */
 	private void save2SD(byte[] sData) {
 		String sRoot = null;
 		String sFileName = null;
@@ -276,18 +278,40 @@ public class MyleService extends Service {
 		sFileName = year+"" + month + "" + date + 
 				"" + hour + "" + min + "" + second + ".wav";
 		sPath = sRoot.concat("/").concat(this.getString(R.string.app_name));
-		if (LocalIOTools.coverByte2File(sPath, sFileName, sData)){
+		if (covertByte2File(sPath, sFileName, sData)){
 			String sMsg = ("save to:").concat(sPath).concat("/").concat(sFileName);
 			if (mListener != null) {
 				mListener.log(sMsg);				
 			}
-		}else{
+		} else {
 			if (mListener != null) {
 				mListener.log("Save fail");
 			}
 		}
 	}
-			
+
+    /* Copy binary data into a file */
+    private boolean covertByte2File(String sPath, String sFile, byte[] bData) {
+        try	{
+            File fhd = new File(sPath);
+            if (!fhd.exists())
+                if (!fhd.mkdirs())
+                    return false;
+
+            fhd = new File(sPath +"/"+ sFile);
+            if (fhd.exists())
+                fhd.delete();
+
+            FileOutputStream fso = new FileOutputStream(fhd);
+            fso.write(bData);
+            fso.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 	private void getAudioFileTimestamp(byte[] data) {
 		// Get date time. byte 8 to 11.
 		int temp = (int) ((data[8]) + (data[9])*(Math.pow(16, 2)) + 

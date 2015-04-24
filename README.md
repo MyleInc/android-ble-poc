@@ -2,7 +2,7 @@
 A simple program to communicate with board.
 
 
-+++ April, 21, 2015 +++
++++++++++++++++++ April, 21, 2015 +++++++++++++++++
 
 1. Tested device:
     + Galaxy S3 (Android 4.3): work
@@ -22,3 +22,11 @@ A simple program to communicate with board.
 
 3. Can't change connection parameter due to api BluetoothGatt.requestConnectionPriority() only
     available from SDK 21 (Android 5.0)
+
+
++++++++++++++++++ April, 24, 2015 +++++++++++++++++
+
+1. Convert project from eclipse to Android Studio
+2. Change android:minSdkVersion from 21 to 18
+3. Move covertByte2File() from LocalIOTools.java to MyleService.java
+4. Delete file LocalIOTools.java
