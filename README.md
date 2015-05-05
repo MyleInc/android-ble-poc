@@ -30,3 +30,8 @@ A simple program to communicate with board.
 2. Change android:minSdkVersion from 21 to 18
 3. Move covertByte2File() from LocalIOTools.java to MyleService.java
 4. Delete file LocalIOTools.java
+
+
++++++++++++++++++ May, 05, 2015 +++++++++++++++++
+
+1. Fix android 5.0 bugs

@@ -1,12 +1,5 @@
 package com.example.myle;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.UUID;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -18,7 +11,17 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.UUID;
 
 /*
  * BLE implementation.
@@ -130,8 +133,29 @@ public class BleWrapper {
         }
         
         mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(deviceAddress);
-    	mBluetoothGatt = mBluetoothDevice.connectGatt(mContext, true, mBleCallback);
-    	
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Method connectGattMethod = null;
+
+            try {
+                connectGattMethod = mBluetoothDevice.getClass().getMethod("connectGatt", Context.class, boolean.class, BluetoothGattCallback.class, int.class);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                mBluetoothGatt = (BluetoothGatt) connectGattMethod.invoke(mBluetoothDevice, mContext, false, mBleCallback, 2);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        } else  {
+            mBluetoothGatt = mBluetoothDevice.connectGatt(mContext, true, mBleCallback);
+        }
+
     	// Save connecting device address for reconnect later
     	mConnectingDeviceAddress = deviceAddress;
     }  
@@ -268,25 +292,30 @@ public class BleWrapper {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         	if (status == BluetoothGatt.GATT_SUCCESS) {
         		if (newState == BluetoothProfile.STATE_CONNECTED) {
-                	Log.i (TAG, "Connectted");
-                	
+                	Log.i (TAG, "Connected");
+
+                    // Set LE to high speed mode
+                    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        mBluetoothGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+                    }
+
                 	mIsConnected = true;
-                	mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_SUCCESS);
+                	mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_SUCCESS, "null");
                 	
                 	// In our case we would also like automatically to call for services discovery
                 	startServicesDiscovery();
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && mIsConnected) { /* disconnect */
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && mIsConnected) { /* Device disconnect */
             		Log.i(TAG, "Remote device disconnect");
             		mIsConnected = false;
             		mBLEWrapperListener.onDisconnected();
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && !mIsConnected) { /* connect fail */
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && !mIsConnected) { /* Phone disconnect */
             		Log.i(TAG, "Phone disconnect");
-            		mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL);
+            		mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL, "null");
             		mBluetoothGatt = null;
                 }
-        	} else {
+        	} else { /* connect fail */
         		Log.i(TAG, "Gatt error = " + status);
-        		mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL);
+        		mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL, status + "");
         	}
         }
 
@@ -342,7 +371,7 @@ public class BleWrapper {
     
     interface BLEWrapperListener {
     	public void onFoundDevice(BluetoothDevice device, final int rssi, final byte[] scanRecord);
-    	public void onConnectResult(Constant.ConnectState resultCode);
+    	public void onConnectResult(Constant.ConnectState resultCode, String error);
     	public void onDisconnected();
     	public void onFoundService(List<BluetoothGattService> service);
     	public void onListCharacteristics(List<BluetoothGattCharacteristic> chars);

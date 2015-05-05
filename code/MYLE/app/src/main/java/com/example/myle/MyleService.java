@@ -117,6 +117,10 @@ public class MyleService extends Service {
 	}
 	
 	public void startScan() {
+        if (mListener != null) {
+            mListener.log("Start scanning");
+        }
+
 		mBleWrapper.startScanning();
 	}
 	
@@ -224,13 +228,14 @@ public class MyleService extends Service {
 		send(data3);
 		
 		if (mListener != null) {
+            Log.i(TAG, "Sent password");
 			mListener.log("sent password");
 		}
 	}
 	
 	/**
 	 * FIXME
-	 * Get name of scan device form advistement. 
+	 * Get name of scan device for advertisement.
 	 * Android core can't read name.
 	 * You can use another app on Google Play to verify
 	 * @param scanRecord
@@ -314,27 +319,27 @@ public class MyleService extends Service {
 
 	private void getAudioFileTimestamp(byte[] data) {
 		// Get date time. byte 8 to 11.
-		int temp = (int) ((data[8]) + (data[9])*(Math.pow(16, 2)) + 
-				(data[10])*(Math.pow(16, 4)) + (data[11])*(Math.pow(16, 6)));
+        int temp = (int) (((data[8])&0xff) + ((data[9])&0xff)*(Math.pow(16, 2)) +
+                ((data[10])&0xff)*(Math.pow(16, 4)) + ((data[11])&0xff)*(Math.pow(16, 6)));
 		
-		second = ((temp & 0x1f) * 2);
-		temp = temp >> 5;
-		
-		min = temp & 0x3f;
-		temp = temp  >> 6;
-		
-		hour = temp & 0x1f;
-		temp = temp >> 5;
-		
-		date = temp & 0x1f;
-		temp = temp >> 5;
-		
-		month = temp & 0xf;
-		temp = temp >> 4;
-		
-		year = (temp & 0x7f);
-		
-		if (mListener != null) {
+        second = ((temp & 0x1f) * 2);
+        temp = temp >> 5;
+
+        min = temp & 0x3f;
+        temp = temp  >> 6;
+
+        hour = temp & 0x1f;
+        temp = temp >> 5;
+
+        date = temp & 0x1f;
+        temp = temp >> 5;
+
+        month = temp & 0xf;
+        temp = temp >> 4;
+
+        year = (temp & 0x7f) + 1980;
+
+        if (mListener != null) {
 			mListener.log(year + "-" + month + "-" +date + "_" + hour + ":" + min + ":" + second);
 		}
 	}
@@ -375,26 +380,29 @@ public class MyleService extends Service {
 		} else if (recvCountAudio < dataRecvLength) {
 			// Get audio data
 			System.arraycopy(data, 0, dataRecv, recvCountAudio, data.length);
-			recvCountAudio += data.length; 
-			
+			recvCountAudio += data.length;
+            Log.i(TAG, "recvCountAudio = " + recvCountAudio);
+
 			/* End of audio file */
 			if (recvCountAudio == dataRecvLength) {
+                Log.i(TAG, "Receive done");
 				// Save audio file to sdcard
 				save2SD(dataRecv);
-				
-				// Clear variable, flags
-				dataRecvLength = 0;
-				recvCountAudio = 0;
-				isReceivingAudioFile = false;
 				
 				// Calc transfer audio file time
 				stopRecvTime = System.currentTimeMillis();
 				long timeTransfer = (stopRecvTime - startRecvTime)/1000;// to second
 				
 				if (mListener != null) {
-					mListener.log("Eslapse " + timeTransfer + " seconds");
+					mListener.log("Elapse " + timeTransfer + " seconds");
+                    mListener.log("Speed  = " + (recvCountAudio/timeTransfer) + " B/s");
 					mListener.log("Receive done");
 				}
+
+                // Clear variable, flags
+                dataRecvLength = 0;
+                recvCountAudio = 0;
+                isReceivingAudioFile = false;
 			} 
 		}
 
@@ -429,7 +437,7 @@ public class MyleService extends Service {
 				int x = Integer.parseInt(result);
 				mParameterListener.onReceivePAUSELEN(x);
 				return true;
-			} 
+			}
 			else if (str.contains("ACCELERSENS")){
 				String result = str.replace("ACCELERSENS", "");
 				int x = Integer.parseInt(result);
@@ -584,29 +592,35 @@ public class MyleService extends Service {
 			recvCountAudio = 0;
 			dataRecvLength = 0;
 			isReceivingAudioFile = false;
+
+            // Re-connect
+            mBleWrapper.close();
+            initBlewrapper();
+            startScan();
 		}
 		
 		@Override
-		public void onConnectResult(ConnectState resultCode) {
+		public void onConnectResult(ConnectState resultCode, String error) {
 			if (resultCode == Constant.ConnectState.BLE_CONNECT_FAIL) {
 				if (mListener != null) {
-					mListener.log("Connect fail");
+					mListener.log("Connect fail, error = " + error);
 				}
 				
 				recvCountAudio = 0;
 				dataRecvLength = 0;
 				isReceivingAudioFile = false;
+
+                if (!error.equals("null")) {
+                    // Re-connect
+                    mBleWrapper.close();
+                    initBlewrapper();
+                    startScan();
+                }
 	    	}
 		}
 
 		@Override
 		public void onDidConfigureGatt() {
-			
-//			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-//				mBleWrapper.configureHighSpeedMode();
-//			}
-			
-			// Wait config receive charac done due to gatt implement 1 command at a time
 			sendPassword();
 		}
 	};

@@ -109,4 +109,5 @@ public class LauncherActivity extends ActionBarActivity {
 	   
 	   super.onActivityResult(arg0, arg1, arg2);
 	}
+
 }
