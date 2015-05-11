@@ -280,7 +280,6 @@ public class BleWrapper {
     private BluetoothAdapter.LeScanCallback mDeviceFoundCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-        	Log.i(TAG, new String(scanRecord, StandardCharsets.UTF_8));
         	mBLEWrapperListener.onFoundDevice(device, rssi, scanRecord);
         }
     };
