@@ -39,3 +39,4 @@ A simple program to communicate with board.
 +++++++++++++++++ May, 11, 2015 +++++++++++++++++
 
 1. Fix unatable bugs
+2. Remove LauncherActivity.java
