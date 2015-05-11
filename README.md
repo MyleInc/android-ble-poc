@@ -37,4 +37,5 @@ A simple program to communicate with board.
 1. Fix android 5.0 bugs
 
 +++++++++++++++++ May, 11, 2015 +++++++++++++++++
+
 1. Fix unatable bugs
