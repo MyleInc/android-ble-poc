@@ -1,7 +1,5 @@
 package com.example.myle;
 
-import java.util.Calendar;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -18,6 +16,8 @@ import android.widget.Toast;
 
 import com.example.myle.MyleService.LocalBinder;
 import com.example.myle.MyleService.MyleServiceListener;
+
+import java.util.Calendar;
 
 /*
  * Display tasks log.
@@ -56,23 +56,17 @@ public class LogActivity extends Activity{
 	}
 	    
     @Override
-    protected void onStop() {
-    	super.onStop();
-    	
-    }
-	    
-    @Override
     protected void onDestroy() {
     	super.onDestroy();
 
-    	mMyleService.stopScan();
-    	mMyleService.disconnect();
-    	
-    	// Unbound service
-		if(mBounded) {
- 		   unbindService(mConnection);
- 		   mBounded = false;
-		}
+        mMyleService.stopScan();
+        mMyleService.disconnect();
+
+        // Unbound service
+        if(mBounded) {
+            unbindService(mConnection);
+            mBounded = false;
+        }
     }
 	    
     // Handle connection service
@@ -127,11 +121,17 @@ public class LogActivity extends Activity{
     		
     		Toast.makeText(this, "Forgot current device", Toast.LENGTH_LONG).show();
     		break;
-    		
+
+        case R.id.action_get_num_rev_audio:
+            int num = mMyleService.getReceiveByteAudio();
+            Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();
+            break;
+
         case android.R.id.home:
 	        NavUtils.navigateUpFromSameTask(this);
 	        finish();
 	        return true;
+
         }
         
         

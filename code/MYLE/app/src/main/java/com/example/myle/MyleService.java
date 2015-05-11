@@ -1,12 +1,5 @@
 package com.example.myle;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
 import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
@@ -25,6 +18,13 @@ import android.util.Log;
 
 import com.example.myle.BleWrapper.BLEWrapperListener;
 import com.example.myle.Constant.ConnectState;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 /*
  * Handle bluetooth tasks.
@@ -52,6 +52,7 @@ public class MyleService extends Service {
 	private ArrayList<BluetoothDevice> mListDevice = new ArrayList<BluetoothDevice>();
 	private final IBinder mBinder = new LocalBinder();
 	private static boolean sIsRunning;
+    private boolean isConnecting;
 
 	@Override
 	public void onCreate() {
@@ -61,7 +62,8 @@ public class MyleService extends Service {
 			Log.v(TAG, "Already run");
 			return;
 		}
-		
+
+        Log.i(TAG, "onCreate");
 		sIsRunning = true;
 		
 		// Create foreground notification. 
@@ -74,6 +76,7 @@ public class MyleService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startID) {
+        Log.i(TAG, "onStartCommand");
 	    return START_NOT_STICKY; 
 	}
 	
@@ -103,7 +106,11 @@ public class MyleService extends Service {
 	public void setParameterListener(ParameterListener listener) {
 		this.mParameterListener = listener;
 	}
-	
+
+    public int getReceiveByteAudio() {
+        return recvCountAudio;
+    }
+
 	public static boolean isRunning() {
 		return sIsRunning;
 	}
@@ -121,13 +128,14 @@ public class MyleService extends Service {
             mListener.log("Start scanning");
         }
 
+        Log.i(TAG, "Start scanning");
 		mBleWrapper.startScanning();
 	}
 	
 	public void stopScan() {
 		mListDevice.clear();
-		mBleWrapper.stopScanning();
-	}
+    mBleWrapper.stopScanning();
+}
 	
 	public void connect(final BluetoothDevice device) {
 		/* Save connecting address */
@@ -156,18 +164,21 @@ public class MyleService extends Service {
 	
 	public void disconnect() {
 		mBleWrapper.diconnect();
-	}
+
+        recvCountAudio = 0;
+        dataRecvLength = 0;
+        isReceivingAudioFile = false;
+    }
 	
 	public void send(byte[] data) {
 		mBleWrapper.writeDataToCharacteristic(mWriteCharacter, data);
 	}
 	
 	private void initBlewrapper() {
+        Log.i(TAG, "initBlewrapper");
         mBleWrapper = new BleWrapper(getApplicationContext());
         mBleWrapper.setBLEWrapperListener(bleWrapperListener);
 	}
-	
-	
 	
 	/**
 	 * Sync device time with phone time
@@ -474,6 +485,7 @@ public class MyleService extends Service {
 				mListener.log("connected");
 			}
 			syncTime();
+
 			return true;
 		} 
 		
@@ -566,6 +578,8 @@ public class MyleService extends Service {
 		
 		@Override
 		public void onFoundDevice(BluetoothDevice device, final int rssi, final byte[] scanRecord) {
+            if (isConnecting) return;
+
 			 SharedPreferences sharedPref = getSharedPreferences(getPackageName(), MODE_PRIVATE);
 			 String uuid = sharedPref.getString(Constant.SharedPrefencesKeyword.PERIPHERAL_ADDRESS, null);
 			
@@ -581,17 +595,20 @@ public class MyleService extends Service {
 				 String name = getNameOfScanDevice(scanRecord);
 				 mListener.onFoundNewDevice(device, name);
 				 
-			 } else if ((uuid != null) && 
-					 (device.getAddress().toString().equalsIgnoreCase(uuid))) {  /* Device that connected before */
-				 connect(device);
+			 } else if ((uuid != null) && (device.getAddress().toString().equalsIgnoreCase(uuid))) {  /* Device that connected before */
+                 Log.i(TAG, "Connecting ...");
+                 isConnecting = true;
+                 connect(device);
 			 }
 		}
 		
 		@Override
 		public void onDisconnected() {
+            Log.i(TAG, "Disconnect");
 			recvCountAudio = 0;
 			dataRecvLength = 0;
 			isReceivingAudioFile = false;
+            isConnecting = false;
 
             // Re-connect
             mBleWrapper.close();
@@ -601,21 +618,24 @@ public class MyleService extends Service {
 		
 		@Override
 		public void onConnectResult(ConnectState resultCode, String error) {
-			if (resultCode == Constant.ConnectState.BLE_CONNECT_FAIL) {
+			isConnecting = false;
+
+            if (resultCode == Constant.ConnectState.BLE_CONNECT_FAIL) {
 				if (mListener != null) {
-					mListener.log("Connect fail, error = " + error);
+					mListener.log("Gatt error = " + error);
 				}
 				
 				recvCountAudio = 0;
 				dataRecvLength = 0;
 				isReceivingAudioFile = false;
+                isConnecting = false;
 
-                if (!error.equals("null")) {
-                    // Re-connect
-                    mBleWrapper.close();
-                    initBlewrapper();
-                    startScan();
-                }
+                // Re-connect
+                mBleWrapper.stopScanning();
+                mBleWrapper.diconnect();
+
+                initBlewrapper();
+                startScan();
 	    	}
 		}
 

@@ -1,7 +1,5 @@
 package com.example.myle;
 
-import java.util.Locale;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,6 +18,8 @@ import android.widget.Toast;
 
 import com.example.myle.MyleService.LocalBinder;
 import com.example.myle.MyleService.ParameterListener;
+
+import java.util.Locale;
 
 /*
  * Write & read parameters
@@ -265,9 +265,14 @@ public class ParameterActivity extends Activity {
 	}
 	
 	private byte[] makeWritePASSWORDCommand(String value){
-		String temp = "5502PASS" + value.length() + value;
-		byte[] c = temp.getBytes();
-		return c;
+        byte[] a = new byte[]{'5', '5', '0', '2','P', 'A', 'S', 'S', (byte)value.length()};
+        byte[] b = value.getBytes();
+
+        byte[] c = new byte[a.length + b.length];
+        System.arraycopy(a, 0, c, 0, a.length);
+        System.arraycopy(b, 0, c, a.length, b.length);
+
+        return c;
 	}
 	
 	private byte[] makeWriteBTLOCCommand(String value){

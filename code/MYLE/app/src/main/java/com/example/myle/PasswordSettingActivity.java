@@ -1,7 +1,5 @@
 package com.example.myle;
 
-import com.example.myle.MyleService.LocalBinder;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,6 +10,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
 import android.widget.EditText;
+
+import com.example.myle.MyleService.LocalBinder;
 
 /*
  * Show password.
@@ -43,15 +43,15 @@ public class PasswordSettingActivity extends Activity{
 		String password = prefs.getString(Constant.SharedPrefencesKeyword.PASSWORD, DEFAULT_PASSWORD);
 		mEdPassword = (EditText)findViewById(R.id.ed_password);
 		mEdPassword.setText(password);
+
+        Intent mIntent = new Intent(this, MyleService.class);
+        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
 	}
 	
 	 // Bound to SPPService
     @Override
 	protected void onStart() {
       	super.onStart();
-      	
-    	Intent mIntent = new Intent(this, MyleService.class);
-        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
 	}
 	    
     @Override
@@ -64,7 +64,7 @@ public class PasswordSettingActivity extends Activity{
  		   mBounded = false;
 		}
     }
-    
+
     // Handle connection service
  	ServiceConnection mConnection = new ServiceConnection() {
  		public void onServiceDisconnected(ComponentName name) {

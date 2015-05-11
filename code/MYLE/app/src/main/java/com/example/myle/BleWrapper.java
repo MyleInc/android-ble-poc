@@ -126,11 +126,11 @@ public class BleWrapper {
      */
     public void connect(String deviceAddress) {
     	// Previously connected device.  Try to reconnect.
-        if (mConnectingDeviceAddress != null && deviceAddress.equals(mConnectingDeviceAddress)
-                && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            if (mBluetoothGatt.connect()) return;
-        }
+//        if (mConnectingDeviceAddress != null && deviceAddress.equals(mConnectingDeviceAddress)
+//                && mBluetoothGatt != null) {
+//            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+//            if (mBluetoothGatt.connect()) return;
+//        }
         
         mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(deviceAddress);
 
@@ -168,6 +168,7 @@ public class BleWrapper {
     	if (null == mBluetoothGatt) return;
     	
 		mBluetoothGatt.disconnect();
+        mBluetoothGatt.close();
 		mIsConnected = false;
     }
 
@@ -219,9 +220,9 @@ public class BleWrapper {
      */
     public void writeDataToCharacteristic(BluetoothGattCharacteristic ch, final byte[] dataToWrite) {
     	if (null == ch) return;
-    	
-    	mWriteCharacQueue.add(dataToWrite);
-    	
+
+       	mWriteCharacQueue.add(dataToWrite);
+
     	if (mWriteCharacQueue.size() == 1) {
 			ch.setValue(mWriteCharacQueue.element());
 			mBluetoothGatt.writeCharacteristic(ch);
@@ -292,7 +293,9 @@ public class BleWrapper {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         	if (status == BluetoothGatt.GATT_SUCCESS) {
         		if (newState == BluetoothProfile.STATE_CONNECTED) {
-                	Log.i (TAG, "Connected");
+                	if (isConnected()) return;
+
+                    Log.i (TAG, "Connected");
 
                     // Set LE to high speed mode
                     if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -310,7 +313,7 @@ public class BleWrapper {
             		mBLEWrapperListener.onDisconnected();
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED && !mIsConnected) { /* Phone disconnect */
             		Log.i(TAG, "Phone disconnect");
-            		mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL, "null");
+            		//mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL, "null");
             		mBluetoothGatt = null;
                 }
         	} else { /* connect fail */
@@ -338,6 +341,7 @@ public class BleWrapper {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
         	if (characteristic.getUuid().toString().equals(Constant.CHARACTERISTIC_UUID_TO_READ)) {
+                Log.i(TAG, "onCharacteristicChanged");
 	    		mBLEWrapperListener.onReceiveData(gatt, 
 							            		characteristic, 
 							            		characteristic.getValue());
@@ -347,13 +351,13 @@ public class BleWrapper {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         	if (status == BluetoothGatt.GATT_SUCCESS) {
-        		mWriteCharacQueue.remove();
-        		
-        		if(mWriteCharacQueue.size() > 0) {
-    				characteristic.setValue(mWriteCharacQueue.element());
+                mWriteCharacQueue.remove();
+
+                if(mWriteCharacQueue.size() > 0) {
+                    characteristic.setValue(mWriteCharacQueue.element());
                     mBluetoothGatt.writeCharacteristic(characteristic);
-        		}
-        	}
+                }
+            }
         };
         
         @Override

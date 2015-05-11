@@ -1,19 +1,32 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-   	<item
-        android:id="@+id/action_clear"
-        android:title="@string/log_ac_clear_log"
-        android:showAsAction="always"/>
-   	
-   	<item
-        android:id="@+id/action_parameter"
-        android:enabled="true"
-        android:title="@string/log_ac_parameter"
-        android:showAsAction="always"/>
-   	
-	<item
-		android:id="@+id/action_forget_device"
-		android:title="@string/log_ac_forget_device"
-		android:showAsAction="always"/>
+    <item
+        android:icon="@drawable/ic_action_overflow"
+        android:title=""
+        android:showAsAction="always">
 
+        <menu>
+            <item
+                android:id="@+id/action_clear"
+                android:title="@string/log_ac_clear_log"
+                android:showAsAction="never"/>
+
+            <item
+                android:id="@+id/action_parameter"
+                android:enabled="true"
+                android:title="@string/log_ac_parameter"
+                android:showAsAction="never"/>
+
+            <item
+                android:id="@+id/action_forget_device"
+                android:title="@string/log_ac_forget_device"
+                android:showAsAction="never"/>
+
+            <item
+                android:id="@+id/action_get_num_rev_audio"
+                android:title="Get received audio byte"
+                android:showAsAction="never"/>
+        </menu>
+
+    </item>
 </menu>

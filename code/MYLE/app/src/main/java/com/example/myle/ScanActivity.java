@@ -1,16 +1,12 @@
 package com.example.myle;
 
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +17,8 @@ import android.widget.ListView;
 
 import com.example.myle.MyleService.LocalBinder;
 import com.example.myle.MyleService.MyleServiceListener;
+
+import java.util.ArrayList;
 
 /*
  * Display scan ble device result.
@@ -58,25 +56,18 @@ public class ScanActivity extends Activity {
 		Intent mIntent = new Intent(this, MyleService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
 	}
-	
-	@Override
-    protected void onStop() {
-    	super.onStop();
-    	
-    	// Unbound service
-		if(mBounded) {
- 		   unbindService(mConnection);
- 		   mBounded = false;
-		}
-    }
 
 	@Override
 	protected void onDestroy() {
 		mListDevice.clear();
 		mAdapter.notifyDataSetChanged();
 		mMyleService.stopScan();
-		Intent intent = new Intent(ScanActivity.this, MyleService.class);
-		stopService(intent);
+
+        // Unbound service
+        if(mBounded) {
+            unbindService(mConnection);
+            mBounded = false;
+        }
 
 		super.onDestroy();
 	}

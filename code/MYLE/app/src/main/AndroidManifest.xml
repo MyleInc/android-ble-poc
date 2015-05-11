@@ -19,7 +19,7 @@
         android:theme="@style/AppTheme" >
         
         <activity
-            android:name=".LauncherActivity"
+            android:name=".PasswordSettingActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,9 +28,7 @@
         </activity>
         
         <activity android:name=".ScanActivity"></activity>
-        <activity android:name=".PasswordSettingActivity">
-        </activity>
-        
+
         <activity android:name=".LogActivity"
             android:launchMode="singleTop">
             <meta-data
