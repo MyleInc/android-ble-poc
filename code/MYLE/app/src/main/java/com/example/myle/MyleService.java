@@ -44,15 +44,20 @@ public class MyleService extends Service {
 	private MyleServiceListener mListener;
 	private ParameterListener mParameterListener;
 	private boolean isReceivingAudioFile;
-	private int dataRecvLength = 0;
-	private int recvCountAudio = 0;
-	private byte[] dataRecv;
+    private boolean isReceivingLogFile;
+	private int audioRecvLength;
+    private int logRecvLength;
+	private int recvCountAudio;
+    private int recvCountLog;
+	private byte[] audioBuffer;
+    private byte[] logBuffer;
 	private int second, min, hour, date, month, year;
 	private long startRecvTime, stopRecvTime;
 	private ArrayList<BluetoothDevice> mListDevice = new ArrayList<BluetoothDevice>();
 	private final IBinder mBinder = new LocalBinder();
 	private static boolean sIsRunning;
     private boolean isConnecting;
+    private int mReceiveMode;
 
 	@Override
 	public void onCreate() {
@@ -134,9 +139,13 @@ public class MyleService extends Service {
 	
 	public void stopScan() {
 		mListDevice.clear();
-    mBleWrapper.stopScanning();
-}
-	
+        mBleWrapper.stopScanning();
+    }
+
+    public void connect (int index) {
+        connect(mListDevice.get(index));
+    }
+
 	public void connect(final BluetoothDevice device) {
 		/* Save connecting address */
 		SharedPreferences sharedPref = getSharedPreferences(getPackageName(), MODE_PRIVATE);
@@ -164,10 +173,8 @@ public class MyleService extends Service {
 	
 	public void disconnect() {
 		mBleWrapper.diconnect();
-
-        recvCountAudio = 0;
-        dataRecvLength = 0;
-        isReceivingAudioFile = false;
+        clearFlags();
+        stopSelf();
     }
 	
 	public void send(byte[] data) {
@@ -282,20 +289,18 @@ public class MyleService extends Service {
 	}
 	
 	/* Save file into sdcard */
-	private void save2SD(byte[] sData) {
+	private void save2SD(byte[] sData, String name) {
 		String sRoot = null;
-		String sFileName = null;
 		String sPath = null;
+
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 			sRoot = Environment.getExternalStorageDirectory().toString();
 		else
 			return;
-	
-		sFileName = year+"" + month + "" + date + 
-				"" + hour + "" + min + "" + second + ".wav";
+
 		sPath = sRoot.concat("/").concat(this.getString(R.string.app_name));
-		if (covertByte2File(sPath, sFileName, sData)){
-			String sMsg = ("save to:").concat(sPath).concat("/").concat(sFileName);
+		if (covertByte2File(sPath, name, sData)){
+			String sMsg = ("save to:").concat(sPath).concat("/").concat(name);
 			if (mListener != null) {
 				mListener.log(sMsg);				
 			}
@@ -357,15 +362,27 @@ public class MyleService extends Service {
 		
 	private void getAudioFileSize(byte []data) {
 		// Get audio length. Byte 4 to byte 7.
-		dataRecvLength = (int) ((data[4]&0xff) + (data[5]&0xff)*(Math.pow(16, 2)) + 
+		audioRecvLength = (int) ((data[4]&0xff) + (data[5]&0xff)*(Math.pow(16, 2)) +
 				(data[6]&0xff)*(Math.pow(16, 4)) + (data[7]&0xff)*(Math.pow(16, 6)));
 		if (mListener != null) {
-			mListener.log("audio file size = " + dataRecvLength + " bytes");			
+			mListener.log("audio file size = " + audioRecvLength + " bytes");
 		}
 		
 		// Initialize receive buffer
-		dataRecv = new byte[dataRecvLength];
+		audioBuffer = new byte[audioRecvLength];
 	}
+
+    private void getLogFileSize(byte []data) {
+        // Get audio length. Byte 4 to byte 7.
+        logRecvLength = (int) ((data[4]&0xff) + (data[5]&0xff)*(Math.pow(16, 2)) +
+                (data[6]&0xff)*(Math.pow(16, 4)) + (data[7]&0xff)*(Math.pow(16, 6)));
+        if (mListener != null) {
+            mListener.log("log file size = " + logRecvLength + " bytes");
+        }
+
+        // Initialize receive buffer
+        logBuffer = new byte[logRecvLength];
+    }
 		
 	private void readAudioHeader(byte[] header) {
 		// DEBUG
@@ -376,44 +393,57 @@ public class MyleService extends Service {
 		getAudioFileSize(header);
 		getAudioFileTimestamp(header);
 	}
+
+    private void readLogHeader(byte[] header) {
+        // DEBUG
+        for (int i = 0; i < AUDIO_HEADER_SIZE; i++){
+            Log.i(TAG, "" + header[i]);
+        }
+
+        getLogFileSize(header);
+        getAudioFileTimestamp(header);
+    }
 		
 	private void receiveAudioFile(byte[] data) {
-		if (dataRecvLength == 0) { 
+		if (audioRecvLength == 0) {
 			readAudioHeader(data);
-			
+
+            if (audioRecvLength == 0) return;
+
 			// Get start receive audio file  time
 			startRecvTime = System.currentTimeMillis();
 			
 			isReceivingAudioFile = true;
 			if (mListener != null) {
-				mListener.log("Recieveing audio data...");				
+				mListener.log("Receiving audio data...");
 			}
-		} else if (recvCountAudio < dataRecvLength) {
+		} else if (recvCountAudio < audioRecvLength) {
 			// Get audio data
-			System.arraycopy(data, 0, dataRecv, recvCountAudio, data.length);
+			System.arraycopy(data, 0, audioBuffer, recvCountAudio, data.length);
 			recvCountAudio += data.length;
             Log.i(TAG, "recvCountAudio = " + recvCountAudio);
 
 			/* End of audio file */
-			if (recvCountAudio == dataRecvLength) {
-                Log.i(TAG, "Receive done");
+			if (recvCountAudio == audioRecvLength) {
+                Log.i(TAG, "Receive audio done");
 				// Save audio file to sdcard
-				save2SD(dataRecv);
+				save2SD(audioBuffer, year + "-" + month + "-" +date + "_" + hour + ":" + min + ":" + second + ".wav");
 				
 				// Calc transfer audio file time
 				stopRecvTime = System.currentTimeMillis();
-				long timeTransfer = (stopRecvTime - startRecvTime)/1000;// to second
+				long timeTransfer = (stopRecvTime - startRecvTime);// to second
 				
 				if (mListener != null) {
-					mListener.log("Elapse " + timeTransfer + " seconds");
-                    mListener.log("Speed  = " + (recvCountAudio/timeTransfer) + " B/s");
+					mListener.log("Elapse " + timeTransfer/1000 + " seconds");
+                   // mListener.log("Speed  = " + (recvCountAudio/timeTransfer) + " B/s");
 					mListener.log("Receive done");
 				}
 
                 // Clear variable, flags
-                dataRecvLength = 0;
+                audioRecvLength = 0;
                 recvCountAudio = 0;
                 isReceivingAudioFile = false;
+                mReceiveMode = Constant.RECEIVE_MODE.RECEIVE_NONE;
 			} 
 		}
 
@@ -421,7 +451,54 @@ public class MyleService extends Service {
 		byte[] ack = new byte[]{(byte) ((data.length) & 0xff)};
 		send(ack);
 	}	
-	
+
+    private void receiveLogFile(byte[] data) {
+        if (logRecvLength == 0) {
+            readLogHeader(data);
+
+            // Get start receive audio file  time
+            startRecvTime = System.currentTimeMillis();
+
+            isReceivingLogFile = true;
+            if (mListener != null) {
+                mListener.log("Receiving log data...");
+            }
+        } else if (recvCountLog < logRecvLength) {
+            // Get audio data
+            System.arraycopy(data, 0, logBuffer, recvCountLog, data.length);
+            recvCountLog += data.length;
+            Log.i(TAG, "recvCountLog = " + recvCountLog);
+
+			/* End of log file */
+            if (recvCountLog == logRecvLength) {
+                Log.i(TAG, "Receive log done");
+
+                // Save log file to sdcard
+                save2SD(logBuffer, year + "-" + month + "-" +date + "_" + hour + ":" + min + ":" + second + "_log.txt");
+
+                // Calc transfer audio file time
+                stopRecvTime = System.currentTimeMillis();
+                long timeTransfer = (stopRecvTime - startRecvTime);// to second
+
+                if (mListener != null) {
+                    mListener.log("Elapse " + timeTransfer/1000 + " seconds");
+                    // mListener.log("Speed  = " + (recvCountAudio/timeTransfer) + " B/s");
+                    mListener.log("Receive log done");
+                }
+
+                // Clear variable, flags
+                logRecvLength = 0;
+                recvCountLog = 0;
+                isReceivingLogFile = false;
+                mReceiveMode = Constant.RECEIVE_MODE.RECEIVE_NONE;
+            }
+        }
+
+        // Send ack is number bytes received.
+        byte[] ack = new byte[]{(byte) ((data.length) & 0xff)};
+        send(ack);
+    }
+
 	/**
 	 * Analyze received data
 	 * 
@@ -510,11 +587,23 @@ public class MyleService extends Service {
 			Log.i(TAG, "receive = " + string);
 			
 			// Check parameter
-			String[] temp = string.split("5503");
-			if (temp.length > 1) {
-				if (readParameter(temp[1])) return true;
-			}
-			
+            if (string.contains("5503")) {
+                String[] temp = string.split("5503");
+                if (temp.length > 1) {
+                    if (readParameter(temp[1])) return true;
+                }
+            } else if (string.contains("5504")) {
+                String[] temp = string.split("5504");
+
+                if (temp.length > 1) {
+                    if (temp[1].equals("0")) {
+                        mReceiveMode = Constant.RECEIVE_MODE.RECEIVE_AUDIO_FILE;
+                    } else if (temp[1].equals("1")) {
+                        mReceiveMode = Constant.RECEIVE_MODE.RECEIVE_LOG_FILE;
+                    }
+                }
+            }
+
 			// Check password
 			if (checkPassword(string)) return true;
 
@@ -537,11 +626,15 @@ public class MyleService extends Service {
 		public void onReceiveData(BluetoothGatt gatt,
 				BluetoothGattCharacteristic charac, byte[] data) {
 			
-		    if (!isReceivingAudioFile) {
+		    if (!isReceivingAudioFile && !isReceivingLogFile) {
 		    	if (analyzeNotAudioFile(data)) return;
 		    } 
-		    	
-		    receiveAudioFile(data);
+
+            if (mReceiveMode == Constant.RECEIVE_MODE.RECEIVE_AUDIO_FILE) {
+                receiveAudioFile(data);
+            } else if (mReceiveMode == Constant.RECEIVE_MODE.RECEIVE_LOG_FILE) {
+                receiveLogFile(data);
+            }
 		}
 		
 		@Override
@@ -605,10 +698,7 @@ public class MyleService extends Service {
 		@Override
 		public void onDisconnected() {
             Log.i(TAG, "Disconnect");
-			recvCountAudio = 0;
-			dataRecvLength = 0;
-			isReceivingAudioFile = false;
-            isConnecting = false;
+			clearFlags();
 
             // Re-connect
             mBleWrapper.close();
@@ -625,10 +715,7 @@ public class MyleService extends Service {
 					mListener.log("Gatt error = " + error);
 				}
 				
-				recvCountAudio = 0;
-				dataRecvLength = 0;
-				isReceivingAudioFile = false;
-                isConnecting = false;
+                clearFlags();
 
                 // Re-connect
                 mBleWrapper.stopScanning();
@@ -649,7 +736,17 @@ public class MyleService extends Service {
 		public void onFoundNewDevice(BluetoothDevice device, String deviceName);
 		public void log(String log);
 	}
-	
+
+    private void clearFlags() {
+        recvCountAudio = 0;
+        recvCountLog = 0;
+        audioRecvLength = 0;
+        logRecvLength = 0;
+        isReceivingAudioFile = false;
+        isReceivingLogFile = false;
+        isConnecting = false;
+    }
+
 	public interface ParameterListener {
 		public void onReceiveRECLN(int result);
 		public void onReceivePAUSELEVEL(int result);

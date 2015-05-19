@@ -1,6 +1,7 @@
 package com.example.myle;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.myle.MyleService.LocalBinder;
 import com.example.myle.MyleService.MyleServiceListener;
@@ -29,13 +31,15 @@ import java.util.ArrayList;
 
 public class ScanActivity extends Activity {
 	private static final String TAG = "ScanActivity";
+    private static final int REQUEST_ENABLE_BT = 1234;
 	private MyleService mMyleService;
 	private boolean mBounded;
 	private ListView mListview;
 	private ScanAdapter mAdapter;
 	private boolean mIsScanning;
 	private ArrayList<MyleDevice> mListDevice = new ArrayList<MyleDevice>();
-	
+    private BluetoothAdapter mBluetoothAdapter;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -47,6 +51,17 @@ public class ScanActivity extends Activity {
 		mAdapter = new ScanAdapter(this, R.layout.scan_device_item, mListDevice);
 		mListview.setAdapter(mAdapter);
 		mListview.setOnItemClickListener(listener);
+
+        //Check bluetooth is on
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Device doesn't support LE", Toast.LENGTH_LONG).show();
+        }
+
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
 	}
 	
 	@Override
@@ -110,11 +125,10 @@ public class ScanActivity extends Activity {
 	AdapterView.OnItemClickListener listener = new OnItemClickListener() {
 
 		@Override
-		public void onItemClick(AdapterView<?> arg0, View arg1, int position,
-				long arg3) {
-    		// Connect to device
-    		mMyleService.connect(mListDevice.get(position).getDevice());
-    		startActivity(new Intent(ScanActivity.this, LogActivity.class));
+		public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+    		Intent intent = new Intent(ScanActivity.this, LogActivity.class);
+            intent.putExtra("DEVICE_INDEX", position);
+    		startActivity(intent);
     		finish();
 		}
 	};
@@ -157,4 +171,13 @@ public class ScanActivity extends Activity {
 		public void log(String log) {
 		}
 	};
+
+    @Override
+    protected void onActivityResult(int arg0, int arg1, Intent arg2) {
+        if (!mBluetoothAdapter.isEnabled()) {
+            finish();
+        }
+
+        super.onActivityResult(arg0, arg1, arg2);
+    }
 }

@@ -5,7 +5,13 @@ public class Constant {
 		BLE_CONNECT_SUCCESS,
 		BLE_CONNECT_FAIL
 	}
-	
+
+    public class RECEIVE_MODE {
+        public static final int RECEIVE_AUDIO_FILE = 30;
+        public static final int RECEIVE_LOG_FILE = 31;
+        public static final int RECEIVE_NONE = 32;
+    }
+
 	public class SharedPrefencesKeyword {
 		public static final String PASSWORD = "PASSWORD";
 		public static final String PERIPHERAL_ADDRESS = "PERIPHERAL_ADDRESS";

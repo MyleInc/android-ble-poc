@@ -3,6 +3,7 @@ package com.example.myle;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -28,16 +29,20 @@ import java.util.Calendar;
 
 public class LogActivity extends Activity{
 	private static final String TAG = "LogActivity";
+    private static final String DEFAULT_PASSWORD = "1234abcd";
 	private TextView tvLog;
 	private MyleService mMyleService;
 	private boolean mBounded;
 	private Menu mMenu;
+    private int mChoosenDeviceIndex;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
-        
+
+        mChoosenDeviceIndex = getIntent().getIntExtra("DEVICE_INDEX", -1);
+
         // TextView
         tvLog = (TextView)findViewById(R.id.tv_log);
         
@@ -80,13 +85,22 @@ public class LogActivity extends Activity{
 			mBounded = true;
 			LocalBinder mLocalBinder = (LocalBinder)service;
 			mMyleService = mLocalBinder.getServerInstance();
-			
 			mMyleService.setMyleServiceListener(listener);
+
+            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+            String password = prefs.getString(Constant.SharedPrefencesKeyword.PASSWORD, DEFAULT_PASSWORD);
+            mMyleService.setPassword(password);
+
+            if (mChoosenDeviceIndex >= 0) {
+                mMyleService.connect(mChoosenDeviceIndex);
+            } else {
+                mMyleService.startScan();
+            }
 		 }
 	};
 
 	// Clear log
-	public void clickClearLog(){
+	public void clickClearLog() {
 		tvLog.setText("");
 	}
 	

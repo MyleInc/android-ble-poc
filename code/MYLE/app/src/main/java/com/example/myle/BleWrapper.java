@@ -16,7 +16,6 @@ import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -144,7 +143,7 @@ public class BleWrapper {
             }
 
             try {
-                mBluetoothGatt = (BluetoothGatt) connectGattMethod.invoke(mBluetoothDevice, mContext, false, mBleCallback, 2);
+                mBluetoothGatt = (BluetoothGatt) connectGattMethod.invoke(mBluetoothDevice, mContext, true, mBleCallback, 2);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
@@ -166,10 +165,10 @@ public class BleWrapper {
      */
     public synchronized void diconnect() {
     	if (null == mBluetoothGatt) return;
-    	
+
+        mIsConnected = false;
 		mBluetoothGatt.disconnect();
         mBluetoothGatt.close();
-		mIsConnected = false;
     }
 
     /**
@@ -306,14 +305,10 @@ public class BleWrapper {
                 	
                 	// In our case we would also like automatically to call for services discovery
                 	startServicesDiscovery();
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && mIsConnected) { /* Device disconnect */
-            		Log.i(TAG, "Remote device disconnect");
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && mIsConnected) {
+            		Log.i(TAG, "disconnect");
             		mIsConnected = false;
             		mBLEWrapperListener.onDisconnected();
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED && !mIsConnected) { /* Phone disconnect */
-            		Log.i(TAG, "Phone disconnect");
-            		//mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_FAIL, "null");
-            		mBluetoothGatt = null;
                 }
         	} else { /* connect fail */
         		Log.i(TAG, "Gatt error = " + status);
