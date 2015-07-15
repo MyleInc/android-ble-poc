@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">myle</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    
+    <!-- PasswordSettingActivity  -->
+    <string name="passwordsetting_ac_actionbar_title">Launcher</string>
+	<string name="passwordsetting_ac_lb1">Current Password</string>
+	<string name="passwordsetting_ac_lb2">This is current password to connect to device. \n
+        Modify it to test connect with incorrect password.</string>
+	<string name="passwordsetting_ac_bt">START</string>
+	
+	<!-- ScanActivity -->
+	<string name="scan_ac_actionbar_title">Scan</string>
+	<string name="scan_ac_start_scan">Start Scan</string>
+	<string name="scan_ac_stop_scan">Stop Scan</string>
+	
+	<!-- LogActivity -->
+	<string name="log_ac_actionbar_title">Log</string>
+	<string name="log_ac_clear_log">Clear Log</string>
+	<string name="log_ac_parameter">Parameter</string>
+	<string name="log_ac_forget_device">Forget Device</string>
+	
+	<!-- ParameterActivity -->
+	<string name="RECLN">RECLN</string>
+    <string name="PAUSE_LEVEL">PAUSE_LEVEL</string>
+    <string name="PAUSE_LEN">PAUSE_LEN</string>
+    <string name="ACCELER_SENS">ACCELER_SENS</string>
+    <string name="MIC">MIC</string>
+    <string name="PASSWORD">PASSWORD</string>
+    <string name="BTLOC">BTLOC</string>
+    <string name="UUID">UUID</string>
+    <string name="VERSION">VERSION</string>
+    <string name="read_all">Read All</string>
+    <string name="write_all">Write All</string>
+    <string name="LOCATION">Location</string>
+    
+</resources>
