@@ -206,7 +206,7 @@ public class TapManager implements ServiceConnection {
                     while (mQueue.peek() != null) {
                         // Take an element and process it
                         try {
-                            processRequests(mQueue.take());
+                            mMyleService.send(mQueue.take());
 
                             // This delay need to send sequences of requests
                             Thread.sleep(100);
