@@ -21,7 +21,8 @@ public interface Constant {
     }
 
     interface SharedPrefencesKeyword {
-        String PERIPHERAL_ADDRESS = "PERIPHERAL_ADDRESS";
+        String LAST_CONNECTED_TAP_UUID = "LAST_CONNECTED_TAP_UUID";
+        String LAST_CONNECTED_TAP_PASS = "LAST_CONNECTED_TAP_PASS";
     }
 
     String SERVICE_UUID = "14839ac4-7d7e-415c-9a42-167340cf2339";

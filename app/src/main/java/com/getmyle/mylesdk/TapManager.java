@@ -68,8 +68,7 @@ public class TapManager implements ServiceConnection {
     }
 
     public void connectToDevice(String address, String password) {
-        mMyleService.setPassword(password);
-        mMyleService.connect(address);
+        mMyleService.connect(address, password);
     }
 
     public void forgetCurrentDevice() {

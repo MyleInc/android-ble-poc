@@ -138,14 +138,10 @@ public class MyleService extends Service {
         return mBleWrapper.isConnected();
     }
 
-    public void setPassword(String password) {
-        mPassword = password;
-    }
-
     public void forgetCurrentDevice() {
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit()
-                .remove(Constant.SharedPrefencesKeyword.PERIPHERAL_ADDRESS)
+                .remove(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_UUID)
                 .apply();
     }
 
@@ -161,12 +157,18 @@ public class MyleService extends Service {
         mBleWrapper.stopScanning();
     }
 
-    public void connect(final String address) {
+    public void connect(final String address, String pass) {
         /* Save connecting address */
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit()
-                .putString(Constant.SharedPrefencesKeyword.PERIPHERAL_ADDRESS, address)
+                .putString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_UUID, address)
                 .apply();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_PASS, pass)
+                .apply();
+
+        mPassword = pass;
 
         stopScan();
 
@@ -660,9 +662,11 @@ public class MyleService extends Service {
             if (isConnecting) return;
 
             String uuid = PreferenceManager.getDefaultSharedPreferences(MyleService.this)
-                    .getString(Constant.SharedPrefencesKeyword.PERIPHERAL_ADDRESS, null);
+                    .getString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_UUID, null);
+            String pass = PreferenceManager.getDefaultSharedPreferences(MyleService.this)
+                    .getString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_PASS, null);
 
-            if (uuid == null) {	/* Phone didn't connect to any device before */
+            if (uuid == null || pass == null) {	/* Phone didn't connect to any device before */
 
                 // Already found out before
                 if (mListDevice.get(device.getAddress()) != null) {
@@ -679,7 +683,7 @@ public class MyleService extends Service {
             if ((uuid != null) && (device.getAddress().equalsIgnoreCase(uuid))) {  /* Device that connected before */
                 Log.i(TAG, "Connecting ...");
                 isConnecting = true;
-                connect(device.getAddress());
+                connect(device.getAddress(), pass);
             }
         }
 
