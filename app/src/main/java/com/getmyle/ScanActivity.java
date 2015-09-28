@@ -127,8 +127,8 @@ public class ScanActivity extends Activity implements
         public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
             String deviceAddress = mAdapter.getItem(position).getDevice().getAddress();
 
-            Intent intent = new Intent(ScanActivity.this, LogActivity.class);
-            intent.putExtra(LogActivity.INTENT_PARAM_UUID, deviceAddress);
+            Intent intent = new Intent(ScanActivity.this, PasswordSettingActivity.class);
+            intent.putExtra(PasswordSettingActivity.INTENT_PARAM_UUID, deviceAddress);
             startActivity(intent);
             finish();
         }

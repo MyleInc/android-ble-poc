@@ -7,6 +7,8 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.EditText;
 
+import java.util.UUID;
+
 /*
  * Show password.
  * 
@@ -16,14 +18,19 @@ import android.widget.EditText;
 
 public class PasswordSettingActivity extends Activity {
 
-    private EditText mEdPassword;
+    public static final String INTENT_PARAM_UUID = "uuid";
 
+    private EditText mEdPassword;
+    private String mTapUUID;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_passwordsetting);
         getActionBar().setTitle(getResources().getString(R.string.passwordsetting_ac_actionbar_title));
+
+        mTapUUID = getIntent().getStringExtra(LogActivity.INTENT_PARAM_UUID);
 
         mEdPassword = (EditText) findViewById(R.id.ed_password);
     }
@@ -44,6 +51,10 @@ public class PasswordSettingActivity extends Activity {
                 .putString(AppConstants.PREF_PASSWORD, mEdPassword.getText().toString())
                 .apply();
 
-        startActivity(new Intent(this, ScanActivity.class));
+        Intent intent = new Intent(this, LogActivity.class);
+        intent.putExtra(LogActivity.INTENT_PARAM_UUID, mTapUUID);
+        intent.putExtra(LogActivity.INTENT_PARAM_PASS, mEdPassword.getText().toString());
+        startActivity(intent);
+        finish();
     }
 }

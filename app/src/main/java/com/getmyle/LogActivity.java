@@ -29,10 +29,12 @@ public class LogActivity extends Activity implements
     private static final String TAG = "LogActivity";
 
     public static final String INTENT_PARAM_UUID = "uuid";
+    public static final String INTENT_PARAM_PASS = "pass";
 
     private TextView tvLog;
     private Menu mMenu;
     private String mChoosenDeviceUUID;
+    private String mChoosenDevicePass;
     private TapManager mTapManager;
 
     @Override
@@ -41,6 +43,7 @@ public class LogActivity extends Activity implements
         setContentView(R.layout.activity_log);
 
         mChoosenDeviceUUID = getIntent().getStringExtra(INTENT_PARAM_UUID);
+        mChoosenDevicePass = getIntent().getStringExtra(INTENT_PARAM_PASS);
 
         // TextView
         tvLog = (TextView) findViewById(R.id.tv_log);
@@ -78,13 +81,10 @@ public class LogActivity extends Activity implements
     public void onServiceConnected() {
         mTapManager.setMyleServiceListener(this);
 
-        String password = PreferenceManager.getDefaultSharedPreferences(this)
-                .getString(AppConstants.PREF_PASSWORD, AppConstants.DEFAULT_PASSWORD);
-
         if (TextUtils.isEmpty(mChoosenDeviceUUID)) {
             mTapManager.startScan();
         } else {
-            mTapManager.connectToDevice(mChoosenDeviceUUID, password);
+            mTapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
         }
     }
 
