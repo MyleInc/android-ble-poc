@@ -302,9 +302,6 @@ public class BleWrapper {
 
                     mIsConnected = true;
                     mBLEWrapperListener.onConnectResult(Constant.ConnectState.BLE_CONNECT_SUCCESS, "null");
-
-                    // In our case we would also like automatically to call for services discovery
-                    startServicesDiscovery();
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED && mIsConnected) {
                     Log.i(TAG, "disconnect");
                     mIsConnected = false;

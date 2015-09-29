@@ -661,26 +661,20 @@ public class MyleService extends Service {
         public void onFoundDevice(BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             if (isConnecting) return;
 
+            // Already found out before
+            if (mListDevice.get(device.getAddress()) != null) { return; }
+
+            /* Found new device */
+            mListDevice.put(device.getAddress(), device);
+            notifyListeners(device, getNameOfScanDevice(scanRecord));
+
+            // now try to auto-connect to last remembered device
             String uuid = PreferenceManager.getDefaultSharedPreferences(MyleService.this)
                     .getString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_UUID, null);
             String pass = PreferenceManager.getDefaultSharedPreferences(MyleService.this)
                     .getString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_PASS, null);
 
-            if (uuid == null || pass == null) {	/* Phone didn't connect to any device before */
-
-                // Already found out before
-                if (mListDevice.get(device.getAddress()) != null) {
-                    return;
-                }
-
-				 /* Found new device */
-                mListDevice.put(device.getAddress(), device);
-                String name = getNameOfScanDevice(scanRecord);
-                notifyListeners(device, name);
-
-            }
-
-            if ((uuid != null) && (device.getAddress().equalsIgnoreCase(uuid))) {  /* Device that connected before */
+            if ((uuid != null && pass != null) && (device.getAddress().equalsIgnoreCase(uuid))) {  /* Device that connected before */
                 Log.i(TAG, "Connecting ...");
                 isConnecting = true;
                 connect(device.getAddress(), pass);
@@ -713,6 +707,11 @@ public class MyleService extends Service {
 
                 initBlewrapper();
                 startScan();
+            } else {
+                notifyListeners("Connected! Starting services discovery..");
+
+                // In our case we would also like automatically to call for services discovery
+                mBleWrapper.startServicesDiscovery();
             }
         }
 
