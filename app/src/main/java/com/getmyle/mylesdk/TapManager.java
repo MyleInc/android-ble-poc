@@ -26,33 +26,62 @@ public class TapManager implements ServiceConnection {
         mContext = context;
     }
 
+    /**
+     * Need to call after creating an object of type TapManager
+     */
     public void setTapManagerListener(TapManagerListener listener) {
         mTapManagerListener = listener;
     }
 
+    /**
+    * Need to call in onServiceConnected() and setup listener.
+    *
+    * @param listener This listener will be used for getting founded devices and logging actions.
+    */
     public void setMyleServiceListener(MyleService.MyleServiceListener listener) {
         mMyleService.addMyleServiceListener(listener);
     }
 
+    /**
+     * Need to call in onServiceConnected().
+     *
+     * @param listener This listener will be used for reading data from devices.
+     */
     public void setParameterListener(MyleService.ParameterListener listener) {
         mMyleService.addParameterListener(listener);
     }
 
+    /**
+     * Need to call in onServiceDisconnected() to delete the listener.
+     * This method should be used as pair with onServiceConnected().
+     *
+     * @param listener This listener will be deleted.
+     */
     public void removeMyleServiceListener(MyleService.MyleServiceListener listener) {
         mMyleService.removeMyleServiceListener(listener);
     }
 
+    /**
+     * This method should be used as pair with setParameterListener().
+     *
+     * @param listener This listener will be deleted.
+     */
     public void removeParameterListener(MyleService.ParameterListener listener) {
         mMyleService.removeParameterListener(listener);
     }
 
-    // Need to call in onCreate or onStart or onResume. If connection is OK, the method onServiceConnected will be called.
+    /**
+    * Need to call in Activity#onCreate() or Activity#onStart() or Activity#onResume().
+    * If connection is OK, the method onServiceConnected() will be called.
+    */
     public void connectToService() {
         Intent intent = new Intent(mContext, MyleService.class);
         mContext.bindService(intent, this, Context.BIND_AUTO_CREATE);
     }
 
-    // Need to call in onPause or onStop or onDestroy
+    /**
+     * Need to call in Activity#onPause() or Activity#onStop() or Activity#onDestroy()
+     */
     public void destroy() {
         mQueue.clear();
 
@@ -168,6 +197,7 @@ public class TapManager implements ServiceConnection {
         processRequests("5503VERSION".getBytes());
     }
 
+    // Not public interface
     public void onServiceDisconnected(ComponentName name) {
         if (mTapManagerListener != null) {
             mTapManagerListener.onServiceDisconnected();
