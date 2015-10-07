@@ -181,8 +181,31 @@
 	        android:layout_height="wrap_content"
 	        android:text="@string/write_all"
 	        android:onClick="clickWriteAll"/>
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Read Battery level"
+			android:id="@+id/bt_readBatteryLevel"
+			android:onClick="clickReadBatteryLevel"/>
+
 	</LinearLayout>
-	
-</LinearLayout>
+
+		<LinearLayout
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_gravity="right">
+
+			<Button
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:text="Enable batterry level notification"
+				android:id="@+id/button"
+				android:onClick="clickEnableBatNotification"
+				/>
+		</LinearLayout>
+
+	</LinearLayout>
     
 </ScrollView>

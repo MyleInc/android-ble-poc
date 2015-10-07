@@ -197,6 +197,14 @@ public class TapManager implements ServiceConnection {
         processRequests("5503VERSION".getBytes());
     }
 
+    public void sendReadBATTERY_LEVEL() {
+        mMyleService.requestBatteryLevelValue();
+    }
+
+    public void sendEnableBatteryNotification(){
+        mMyleService.enableBatteryLevelNotification();
+    }
+
     // Not public interface
     public void onServiceDisconnected(ComponentName name) {
         if (mTapManagerListener != null) {
