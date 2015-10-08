@@ -42,6 +42,8 @@ public class LogActivity extends Activity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+
         mChoosenDeviceUUID = getIntent().getStringExtra(INTENT_PARAM_UUID);
         mChoosenDevicePass = getIntent().getStringExtra(INTENT_PARAM_PASS);
 
@@ -133,10 +135,11 @@ public class LogActivity extends Activity implements
                 break;
 
             case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
+                Intent upIntent = NavUtils.getParentActivityIntent(this);
+                upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(upIntent);
                 finish();
                 return true;
-
         }
 
 
