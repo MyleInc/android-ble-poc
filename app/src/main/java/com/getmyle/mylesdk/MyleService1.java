@@ -2,18 +2,30 @@ package com.getmyle.mylesdk;
 
 import android.app.Notification;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.getmyle.R;
@@ -36,9 +48,9 @@ import java.util.Map;
  * @date: 03/30/2015
  */
 
-public class MyleService extends Service {
+public class MyleService1 extends Service {
 
-    private static final String TAG = MyleService.class.getSimpleName();
+    private static final String TAG = MyleService1.class.getSimpleName();
 
     private static int FOREGROUND_ID = 1338;
     private static final int AUDIO_HEADER_SIZE = 12;
@@ -69,6 +81,10 @@ public class MyleService extends Service {
     private int mReceiveMode;
     private Handler mUiThreadHandler = new Handler();
 
+
+    private BluetoothManager mBluetoothManager;
+    private BluetoothAdapter mBluetoothAdapter;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -83,17 +99,97 @@ public class MyleService extends Service {
 
         // Create foreground notification.
         // Service is never killed by system when low memory.
-        startForeground(FOREGROUND_ID, buildForegroundNotification("Myle"));
+        //startForeground(FOREGROUND_ID, buildForegroundNotification("Myle"));
 
         // Init bluetooth wrapper
-        initBlewrapper();
+        //initBlewrapper();
+
+        mBluetoothManager = (BluetoothManager) this.getBaseContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = mBluetoothManager.getAdapter();
+
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothDevice.ACTION_UUID);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        LocalBroadcastManager.getInstance(this.getApplication()).registerReceiver(mReceiver, filter);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startID) {
-        Log.i(TAG, "onStartCommand");
-        return START_NOT_STICKY;
+        Log.i(TAG, "Scan started");
+
+
+
+        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
+        ScanSettings settings = new ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                .build();
+        List<ScanFilter> filters = new ArrayList<>();
+//        ScanFilter filter = new ScanFilter.Builder()
+//                .setServiceUuid(ParcelUuid.fromString(Constant.SERVICE_UUID))
+//                .setServiceUuid(ParcelUuid.fromString(Constant.BATTERY_SERVICE_UUID))
+//                .build();
+//        filters.add(filter);
+
+        final Service me = this;
+
+        // scan for TAPs
+        scanner.startScan(filters, settings, new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                Log.i(TAG, "found device " + callbackType + " " + result.getDevice().getAddress());
+                if (mAvailableTaps.containsKey(result.getDevice().getAddress())) { return; }
+
+                mAvailableTaps.put(result.getDevice().getAddress(), result.getDevice());
+                mAvailableTapNames.put(result.getDevice().getAddress(), getNameOfScanDevice(result.getScanRecord().getBytes()));
+
+                Intent intent = new Intent(Constant.TAP_NOTIFICATION_SCAN);
+                LocalBroadcastManager.getInstance(me.getApplication()).sendBroadcast(intent);
+            }
+        });
+
+        return START_STICKY;
     }
+
+
+    HashMap<String, BluetoothDevice> mAvailableTaps = new HashMap<>(10);
+    HashMap<String, String> mAvailableTapNames = new HashMap<>(10);
+
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            Log.i(TAG,"Action received: "+action);
+            if(action.equals(BluetoothDevice.ACTION_UUID)) {
+                BluetoothDevice btd = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                Log.i(TAG,"Received uuids for "+btd.getName());
+                Parcelable[] uuidExtra = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID);
+                StringBuilder sb = new StringBuilder();
+                List<String> uuids = new ArrayList<String>(uuidExtra.length);
+                if(uuidExtra != null) {
+                    for (int i = 0; i < uuidExtra.length; i++) {
+                        sb.append(uuidExtra[i].toString()).append(',');
+                        uuids.add(uuidExtra[i].toString());
+                    }
+                }
+                Log.i(TAG, "ACTION_UUID received for " + btd.getName() + " uuids: " + sb.toString());
+                //ListContent.addItemWithUUIDs(btd, uuids);
+            }
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void onDestroy() {
@@ -106,11 +202,13 @@ public class MyleService extends Service {
         mBleWrapper.close();
         mBleWrapper.finalize();
         sIsRunning = false;
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
     }
 
     public class LocalBinder extends Binder {
-        public MyleService getServerInstance() {
-            return MyleService.this;
+        public MyleService1 getServerInstance() {
+            return MyleService1.this;
         }
     }
 
@@ -662,6 +760,8 @@ public class MyleService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        // this is needed to bind TapManager to this service,
+        // so TapManager has access to current instance
         return mBinder;
     }
 
@@ -728,7 +828,7 @@ public class MyleService extends Service {
         public void onFoundService(List<BluetoothGattService> services) {
             for (BluetoothGattService service : services) {
                 Log.i(TAG, "Service found = " + service.getUuid());
-                if (service.getUuid().toString().equalsIgnoreCase(Constant.SERVICE_UUID)) {
+                if (service.getUuid().equals(Constant.SERVICE_UUID)) {
                     mBleWrapper.getCharacteristicsForService(service);
                 }else if (service.getUuid().toString().equalsIgnoreCase(Constant.BATTERY_SERVICE_UUID)) {
                     mBleWrapper.getCharacteristicsForService(service);
@@ -749,9 +849,9 @@ public class MyleService extends Service {
             notifyListeners(device, getNameOfScanDevice(scanRecord));
 
             // now try to auto-connect to last remembered device
-            String uuid = PreferenceManager.getDefaultSharedPreferences(MyleService.this)
+            String uuid = PreferenceManager.getDefaultSharedPreferences(MyleService1.this)
                     .getString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_UUID, null);
-            String pass = PreferenceManager.getDefaultSharedPreferences(MyleService.this)
+            String pass = PreferenceManager.getDefaultSharedPreferences(MyleService1.this)
                     .getString(Constant.SharedPrefencesKeyword.LAST_CONNECTED_TAP_PASS, null);
 
             if ((uuid != null && pass != null) && (device.getAddress().equalsIgnoreCase(uuid))) {  /* Device that connected before */

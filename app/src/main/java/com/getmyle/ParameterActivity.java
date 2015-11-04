@@ -10,8 +10,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.getmyle.mylesdk.Constant;
-import com.getmyle.mylesdk.MyleService;
+import com.getmyle.mylesdk.MyleService1;
 import com.getmyle.mylesdk.TapManager;
+import com.getmyle.mylesdk.TapManager1;
 
 /*
  * Write & read parameters
@@ -21,14 +22,14 @@ import com.getmyle.mylesdk.TapManager;
  */
 
 public class ParameterActivity extends Activity implements
-        TapManager.TapManagerListener, MyleService.ParameterListener {
+        MyleService1.ParameterListener {
 
     private EditText mEdRECLN, mEdPAUSELEVEL,
             mEdPAUSELEN, mEdACCELERSENS,
             mEdMIC, mEdPASSWORD,
             mEdBTLOC, mEdUUID, mEdVERSION;
 
-    private TapManager mTapManager;
+    private TapManager1 mTapManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +50,10 @@ public class ParameterActivity extends Activity implements
         mEdUUID = (EditText) findViewById(R.id.ed_uuid);
         mEdVERSION = (EditText) findViewById(R.id.ed_version);
 
-        mTapManager = new TapManager(this);
-        mTapManager.setTapManagerListener(this);
+        mTapManager = new TapManager1(this);
+        //mTapManager.setTapManagerListener(this);
 
-        mTapManager.connectToService();
+        //mTapManager.connectToService();
     }
 
     @Override
@@ -69,18 +70,9 @@ public class ParameterActivity extends Activity implements
     protected void onDestroy() {
         super.onDestroy();
 
-        mTapManager.destroy();
+        //mTapManager.destroy();
     }
 
-    @Override
-    public void onServiceConnected() {
-        mTapManager.setParameterListener(this);
-    }
-
-    @Override
-    public void onServiceDisconnected() {
-        mTapManager.removeParameterListener(this);
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -117,7 +109,7 @@ public class ParameterActivity extends Activity implements
 
         // Read password
         // Set uuid
-        mEdUUID.setText(Constant.SERVICE_UUID);
+        mEdUUID.setText(Constant.SERVICE_UUID.toString());
 
         // Set password
         String password = PreferenceManager.getDefaultSharedPreferences(this)

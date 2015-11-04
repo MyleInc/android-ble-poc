@@ -1,18 +1,14 @@
 package com.getmyle;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.getmyle.mylesdk.MyleService;
 import com.getmyle.mylesdk.TapManager;
 
 import java.util.Calendar;
@@ -24,8 +20,7 @@ import java.util.Calendar;
  * @date: 03/30/2015
  */
 
-public class LogActivity extends Activity implements
-        TapManager.TapManagerListener, MyleService.MyleServiceListener {
+public class LogActivity extends Activity {
     private static final String TAG = "LogActivity";
 
     public static final String INTENT_PARAM_UUID = "uuid";
@@ -54,46 +49,48 @@ public class LogActivity extends Activity implements
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mTapManager = new TapManager(this);
-        mTapManager.setTapManagerListener(this);
+        //MyleApplication.TapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
 
-        mTapManager.connectToService();
+        //mTapManager = new TapManager(this);
+        //mTapManager.setTapManagerListener(this);
+
+        //mTapManager.connectToService();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//
+//        mTapManager.stopScan();
+//    }
 
-        mTapManager.stopScan();
-    }
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//
+//        mTapManager.destroy();
+//    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        mTapManager.destroy();
-    }
-
-    @Override
-    public void onServiceConnected() {
-        mTapManager.setMyleServiceListener(this);
-
-        if (TextUtils.isEmpty(mChoosenDeviceUUID)) {
-            mTapManager.startScan();
-        } else {
-            mTapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
-        }
-    }
-
-    @Override
-    public void onServiceDisconnected() {
-        mTapManager.removeMyleServiceListener(this);
-    }
+//    @Override
+//    public void onServiceConnected() {
+//        mTapManager.setMyleServiceListener(this);
+//
+//        if (TextUtils.isEmpty(mChoosenDeviceUUID)) {
+//            mTapManager.startScan();
+//        } else {
+//            mTapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
+//        }
+//    }
+//
+//    @Override
+//    public void onServiceDisconnected() {
+//        mTapManager.removeMyleServiceListener(this);
+//    }
 
     // Clear log
     public void clickClearLog() {
@@ -124,14 +121,14 @@ public class LogActivity extends Activity implements
                 break;
 
             case R.id.action_forget_device:
-                mTapManager.forgetCurrentDevice();
+                //mTapManager.forgetCurrentDevice();
 
                 Toast.makeText(this, "Forgot current device", Toast.LENGTH_LONG).show();
                 break;
 
             case R.id.action_get_num_rev_audio:
-                int num = mTapManager.getReceiveByteAudio();
-                Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();
+                //int num = mTapManager.getReceiveByteAudio();
+                //Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();
                 break;
 
             case android.R.id.home:
@@ -146,11 +143,11 @@ public class LogActivity extends Activity implements
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onFoundNewDevice(BluetoothDevice device, String deviceName) {
-    }
+//    @Override
+//    public void onFoundNewDevice(BluetoothDevice device, String deviceName) {
+//    }
 
-    @Override
+  //  @Override
     public void log(String log) {
         Calendar c = Calendar.getInstance();
         int seconds = c.get(Calendar.SECOND);

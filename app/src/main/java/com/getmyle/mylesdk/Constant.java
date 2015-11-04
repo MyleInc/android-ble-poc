@@ -1,5 +1,7 @@
 package com.getmyle.mylesdk;
 
+import java.util.UUID;
+
 public interface Constant {
     enum ConnectState {
         BLE_CONNECT_SUCCESS,
@@ -25,7 +27,7 @@ public interface Constant {
         String LAST_CONNECTED_TAP_PASS = "LAST_CONNECTED_TAP_PASS";
     }
 
-    String SERVICE_UUID = "14839ac4-7d7e-415c-9a42-167340cf2339";
+    UUID SERVICE_UUID = UUID.fromString("14839ac4-7d7e-415c-9a42-167340cf2339");
     String CHARACTERISTIC_UUID_TO_WRITE = "ba04c4b2-892b-43be-b69c-5d13f2195392";
     String CHARACTERISTIC_UUID_TO_READ = "0734594a-a8e7-4b1a-a6b1-cd5243059a57";
     String CHARACTERISTIC_UUID_CONFIG1 = "e06d5efb-4f4a-45c0-9eb1-371ae5a14ad4";
@@ -36,4 +38,6 @@ public interface Constant {
     String BATTERY_LEVEL_UUID = "00002a19-0000-1000-8000-00805f9b34fb";
     String BATTERY_SERVICE_UUID = "0000180F-0000-1000-8000-00805f9b34fb";
 
+    String TAP_NOTIFICATION_SCAN = "tap-notification-scan";
+    String TAP_NOTIFICATION_SCAN_PARAM_TAPS = "tap-notification-scan-taps";
 }
