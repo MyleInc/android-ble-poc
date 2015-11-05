@@ -39,11 +39,22 @@ public interface Constant {
     String BATTERY_LEVEL_UUID = "00002a19-0000-1000-8000-00805f9b34fb";
     String BATTERY_SERVICE_UUID = "0000180F-0000-1000-8000-00805f9b34fb";
 
+
+    // send on scan events
     String TAP_NOTIFICATION_SCAN = "tap-notification-scan";
-    String TAP_NOTIFICATION_TAP_CONNECTED = "tap-notification-tap-connected";
-    String TAP_NOTIFICATION_TAP_CONNECTED_PARAM = "tap-notification-tap-connected-param";
+
+    // send when tap is connected and authenticated
+    String TAP_NOTIFICATION_TAP_AUTHED = "tap-notification-tap-authed";
+    String TAP_NOTIFICATION_TAP_AUTHED_PARAM = "tap-notification-tap-authed-param";
+
+    // send when tap authentication failed
+    String TAP_NOTIFICATION_TAP_AUTH_FAILED = "tap-notification-tap-auth-failed";
+    String TAP_NOTIFICATION_TAP_AUTH_FAILED_PARAM = "tap-notification-tap-auth-failed-param";
+
+    // send when tap is disconnected
     String TAP_NOTIFICATION_TAP_DISCONNECTED = "tap-notification-tap-disconnected";
     String TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM = "tap-notification-tap-disconnected-param";
+
 
     byte[] MESSAGE_CONNECTED = "CONNECTED".getBytes();
     byte[] MESSAGE_FILE_AUDIO = "55040".getBytes();

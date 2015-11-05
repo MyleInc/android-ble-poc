@@ -71,6 +71,12 @@ public class MyleBleService extends Service {
     // NOTE: file receiving writes go directly to characteristic to speed things up.
     ConcurrentLinkedQueue<byte[]> writeQueue = new ConcurrentLinkedQueue<>();
 
+    // a flag to track period when password is send and response received.
+    // Response can have two types:
+    // 1. if password is good, "CONNECTED" message is returned
+    // 2, if password is bad, tap disconnects for phone
+    private boolean isAuthenticating = false;
+
 
     @Override
     public void onCreate() {
@@ -217,25 +223,39 @@ public class MyleBleService extends Service {
                 // 1. When status == 19, then it means that a tap forces diconeection from its end
                 //      (this can happen for example when the tap is in middle of recording an audio,
                 //      or when password is incorrect)
-                // 2. When status == 8, then it means that the tap is not in range (for example turded off)
+                // 2. When status == 8, then it means that the tap is not in range (for example turned off)
 
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    Log.i(TAG, "Disconnected from to tap " + gatt.getDevice().getAddress() + " because of reason " + status);
+                    // If we are disconnected during authentication with status 19
+                    // then it looks like password didn't match
+                    if (isAuthenticating) {
+                        Log.i(TAG, "Password doesn't match");
 
-                    Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
-                    intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
-                    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+                        isAuthenticating = false;
+
+                        forgetCurrentTap();
+                        gatt.disconnect();
+
+                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED);
+                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED_PARAM, gatt.getDevice().getAddress());
+                        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+                    } else {
+                        Log.i(TAG, "Disconnected from to tap " + gatt.getDevice().getAddress() + " because of reason " + status);
+
+                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
+                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
+                        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+                    }
                 } else if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                     Log.i(TAG, "Connected to tap " + gatt.getDevice().getAddress());
 
                     // this speeds things up?
-                    btGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+                    gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
 
-                    btGatt.discoverServices();
+                    gatt.discoverServices();
 
-                    Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_CONNECTED);
-                    intent.putExtra(Constant.TAP_NOTIFICATION_TAP_CONNECTED_PARAM, gatt.getDevice().getAddress());
-                    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+                    // we are still not logically connected - once services are discovered
+                    // we will send password for authentication
                 } else {
                     Log.i(TAG, "Connection failed with status " + status + " and newState " + newState);
                 }
@@ -276,8 +296,17 @@ public class MyleBleService extends Service {
                 if (fileReceiver.isInProgress()) {
                     fileReceiver.append(value);
                 } else if (Utils.startsWith(value, Constant.MESSAGE_CONNECTED)) {
-                    // tap accepted password - continue with time sync
+                    // tap accepted password this is the last step when tap is considered connected
+                    Log.i(TAG, "Password is OK!");
+
+                    isAuthenticating = false;
+
                     sendTime();
+
+                    // notify about connected tap
+                    Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTHED);
+                    intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTHED_PARAM, gatt.getDevice().getAddress());
+                    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                 } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_AUDIO)) {
                     Log.i(TAG, "Start receiving audio file...");
                     fileReceiver.start(new FileReceiver.Callbacks() {
@@ -333,7 +362,7 @@ public class MyleBleService extends Service {
                     String string = Utils.extractString(value, Constant.MESSAGE_UUID);
                     notifyReadStringValue(Constant.DEVICE_PARAM_UUID, string);
                 } else {
-                    Log.i(TAG, "onCharacteristicChanged Unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
+                    Log.i(TAG, "onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
                 }
             }
 
@@ -386,6 +415,8 @@ public class MyleBleService extends Service {
         byte data3[] = new byte[data1.length + data2.length];
         System.arraycopy(data1, 0, data3, 0, data1.length);
         System.arraycopy(data2, 0, data3, data1.length, data2.length);
+
+        this.isAuthenticating = true;
 
         addToWriteQueue(data3);
 
