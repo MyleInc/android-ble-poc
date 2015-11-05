@@ -29,7 +29,6 @@ public class ParameterActivity extends Activity implements
             mEdMIC, mEdPASSWORD,
             mEdBTLOC, mEdUUID, mEdVERSION;
 
-    private TapManager1 mTapManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +49,7 @@ public class ParameterActivity extends Activity implements
         mEdUUID = (EditText) findViewById(R.id.ed_uuid);
         mEdVERSION = (EditText) findViewById(R.id.ed_version);
 
-        mTapManager = new TapManager1(this);
+        //mTapManager = new TapManager1(this);
         //mTapManager.setTapManagerListener(this);
 
         //mTapManager.connectToService();
@@ -87,29 +86,32 @@ public class ParameterActivity extends Activity implements
 
     public void clickReadAll(View v) throws InterruptedException {
         // Read RECLN
-        mTapManager.sendReadRECLN();
+        TapManager.getInstance().sendReadRECLN();
 
         // Read PAUSE_LEVEL
-        mTapManager.sendReadPAUSELEVEL();
+        TapManager.getInstance().sendReadPAUSELEVEL();
 
         // Read PAUSE_LEN
-        mTapManager.sendReadPAUSELEN();
+        TapManager.getInstance().sendReadPAUSELEN();
 
         // Read ACCELER_SENS
-        mTapManager.sendReadACCELERSENS();
+        TapManager.getInstance().sendReadACCELERSENS();
 
         // Read MIC
-        mTapManager.sendReadMIC();
+        TapManager.getInstance().sendReadMIC();
 
         // Read BTLOC
-        mTapManager.sendReadBTLOC();
+        TapManager.getInstance().sendReadBTLOC();
 
         // Read Version
-        mTapManager.sendReadVERSION();
+        TapManager.getInstance().sendReadVERSION();
+
+        // Read Version
+        TapManager.getInstance().sendReadUUID();
 
         // Read password
         // Set uuid
-        mEdUUID.setText(Constant.SERVICE_UUID.toString());
+        //mEdUUID.setText(Constant.SERVICE_UUID.toString());
 
         // Set password
         String password = PreferenceManager.getDefaultSharedPreferences(this)
@@ -122,36 +124,36 @@ public class ParameterActivity extends Activity implements
     public void clickReadBatteryLevel(View v) throws InterruptedException {
 
         // Read Battery level
-        mTapManager.sendReadBATTERY_LEVEL();
+        //mTapManager.sendReadBATTERY_LEVEL();
     }
 
     public void clickEnableBatNotification(View v) throws InterruptedException {
 
         // Read Battery level
-        mTapManager.sendEnableBatteryNotification();
+        //mTapManager.sendEnableBatteryNotification();
     }
 
     public void clickWriteAll(View v) throws InterruptedException {
         // Write RECLN
-        mTapManager.sendWriteRECLN(mEdRECLN.getText().toString());
-
-        // Write PAUSE_LEVEL
-        mTapManager.sendWritePAUSELEVEL(mEdPAUSELEVEL.getText().toString());
-
-        // Write PAUSE_LEN
-        mTapManager.sendWritePAUSELEN(mEdPAUSELEN.getText().toString());
-
-        // Write ACCELER_SENS
-        mTapManager.sendWriteACCELERSENS(mEdACCELERSENS.getText().toString());
-
-        // Write MIC
-        mTapManager.sendWriteMIC(mEdMIC.getText().toString());
-
-        // Write BTLOC
-        mTapManager.sendWriteBTLOC(mEdBTLOC.getText().toString());
-
-        // Write PASSWORD
-        mTapManager.sendWritePASSWORD(mEdPASSWORD.getText().toString());
+//        mTapManager.sendWriteRECLN(mEdRECLN.getText().toString());
+//
+//        // Write PAUSE_LEVEL
+//        mTapManager.sendWritePAUSELEVEL(mEdPAUSELEVEL.getText().toString());
+//
+//        // Write PAUSE_LEN
+//        mTapManager.sendWritePAUSELEN(mEdPAUSELEN.getText().toString());
+//
+//        // Write ACCELER_SENS
+//        mTapManager.sendWriteACCELERSENS(mEdACCELERSENS.getText().toString());
+//
+//        // Write MIC
+//        mTapManager.sendWriteMIC(mEdMIC.getText().toString());
+//
+//        // Write BTLOC
+//        mTapManager.sendWriteBTLOC(mEdBTLOC.getText().toString());
+//
+//        // Write PASSWORD
+//        mTapManager.sendWritePASSWORD(mEdPASSWORD.getText().toString());
 
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit()

@@ -1,5 +1,7 @@
 package com.getmyle.mylesdk;
 
+import android.util.Log;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -80,7 +82,7 @@ public class FileReceiver {
                 return;
             }
 
-            this.startTime = System.currentTimeMillis();
+            this.startTime = System.nanoTime();
 
             acknowledge(PACKAGE_SIZE);
         } else if (numBytesReceived < fileLength) {
@@ -89,9 +91,9 @@ public class FileReceiver {
             numBytesReceived += data.length;
 
             if (numBytesReceived >= fileLength) {
-                long transferTime = (System.currentTimeMillis() - this.startTime);
+                long transferTime = System.nanoTime() - this.startTime;
 
-                complete((int) (fileLength / (transferTime / 1000)));
+                complete((int)(fileLength / (transferTime / 1000000000.0)));
             } else {
                 numBytesReceivedWithinPackage += data.length;
 
@@ -106,7 +108,7 @@ public class FileReceiver {
             }
         }
     }
-
+    
 
     /**
      * Extracts file size from metadata received

@@ -49,11 +49,11 @@ public interface Constant {
     byte[] MESSAGE_FILE_AUDIO = "55040".getBytes();
     byte[] MESSAGE_FILE_LOG = "55041".getBytes();
     byte[] MESSAGE_RECLN = ("5503" + DEVICE_PARAM_RECLN).getBytes();
-    byte[] MESSAGE_PAUSELEVEL = ("5503PAUSELEVEL" + DEVICE_PARAM_RECLN).getBytes();
-    byte[] MESSAGE_PAUSELEN = ("5503PAUSELEN" + DEVICE_PARAM_PAUSELEN).getBytes();
-    byte[] MESSAGE_ACCELERSENS = ("5503ACCELERSENS" + DEVICE_PARAM_ACCELERSENS).getBytes();
-    byte[] MESSAGE_BTLOC = ("5503BTLOC" + DEVICE_PARAM_BTLOC).getBytes();
-    byte[] MESSAGE_MIC = ("5503MIC" + DEVICE_PARAM_MIC).getBytes();
-    byte[] MESSAGE_VERSION = ("5503VERSION" + DEVICE_PARAM_VERSION).getBytes();
-    byte[] MESSAGE_UUID = ("5503UUID" + DEVICE_PARAM_UUID).getBytes();
+    byte[] MESSAGE_PAUSELEVEL = ("5503" + DEVICE_PARAM_PAUSELEVEL).getBytes();
+    byte[] MESSAGE_PAUSELEN = ("5503" + DEVICE_PARAM_PAUSELEN).getBytes();
+    byte[] MESSAGE_ACCELERSENS = ("5503" + DEVICE_PARAM_ACCELERSENS).getBytes();
+    byte[] MESSAGE_BTLOC = ("5503" + DEVICE_PARAM_BTLOC).getBytes();
+    byte[] MESSAGE_MIC = ("5503" + DEVICE_PARAM_MIC).getBytes();
+    byte[] MESSAGE_VERSION = ("5503" + DEVICE_PARAM_VERSION).getBytes();
+    byte[] MESSAGE_UUID = ("5503" + DEVICE_PARAM_UUID).getBytes();
 }

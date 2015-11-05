@@ -106,7 +106,9 @@ public class MyleBleService extends Service {
         this.availableTapNames.clear();
 
         BluetoothLeScanner scanner = this.btAdapter.getBluetoothLeScanner();
-        ScanSettings settings = new ScanSettings.Builder().build();
+        ScanSettings settings = new ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build();
         List<ScanFilter> filters = new ArrayList<>();
 
         // scan for TAPs
@@ -391,6 +393,45 @@ public class MyleBleService extends Service {
 
     public void notifyReadParameterListeners(String parameter, int intValue, String stringValue) {
         Log.i(TAG, "notifyReadParameterListeners " + parameter + " int: " + intValue + ", string:" + stringValue);
+    }
+
+
+    public void sendReadRECLN() {
+        processRequests(Constant.MESSAGE_RECLN);
+    }
+
+    public void sendReadBTLOC() {
+        processRequests(Constant.MESSAGE_BTLOC);
+    }
+
+    public void sendReadPAUSELEVEL() {
+        processRequests(Constant.MESSAGE_PAUSELEVEL);
+    }
+
+    public void sendReadPAUSELEN() {
+        processRequests(Constant.MESSAGE_PAUSELEN);
+    }
+
+    public void sendReadACCELERSENS() {
+        processRequests(Constant.MESSAGE_ACCELERSENS);
+    }
+
+    public void sendReadMIC() {
+        processRequests(Constant.MESSAGE_MIC);
+    }
+
+    public void sendReadVERSION() {
+        processRequests(Constant.MESSAGE_VERSION);
+    }
+
+    public void sendReadUUID() {
+        processRequests(Constant.MESSAGE_UUID);
+    }
+
+
+    private void processRequests(byte[] request) {
+        this.writeChrt.setValue(request);
+        this.btGatt.writeCharacteristic(this.writeChrt);
     }
 
 

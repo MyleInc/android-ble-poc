@@ -93,4 +93,37 @@ public class TapManager implements ServiceConnection {
     }
 
 
+    public void sendReadRECLN() {
+        this.service.sendReadRECLN();
+    }
+
+    public void sendReadBTLOC() {
+        this.service.sendReadBTLOC();
+    }
+
+    public void sendReadPAUSELEVEL() {
+        this.service.sendReadPAUSELEVEL();
+    }
+
+    public void sendReadPAUSELEN() {
+        this.service.sendReadPAUSELEN();
+    }
+
+    public void sendReadACCELERSENS() {
+        this.service.sendReadACCELERSENS();
+    }
+
+    public void sendReadMIC() {
+        this.service.sendReadMIC();
+    }
+
+    public void sendReadVERSION() {
+        this.service.sendReadVERSION();
+    }
+
+    public void sendReadUUID() {
+        this.service.sendReadUUID();
+    }
+
+
 }
