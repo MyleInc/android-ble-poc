@@ -7,6 +7,8 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.EditText;
 
+import com.getmyle.mylesdk.TapManager;
+
 import java.util.UUID;
 
 /*
@@ -30,7 +32,7 @@ public class PasswordSettingActivity extends Activity {
         setContentView(R.layout.activity_passwordsetting);
         getActionBar().setTitle(getResources().getString(R.string.passwordsetting_ac_actionbar_title));
 
-        mTapUUID = getIntent().getStringExtra(LogActivity.INTENT_PARAM_UUID);
+        mTapUUID = getIntent().getStringExtra(PasswordSettingActivity.INTENT_PARAM_UUID);
 
         mEdPassword = (EditText) findViewById(R.id.ed_password);
     }
@@ -51,9 +53,10 @@ public class PasswordSettingActivity extends Activity {
                 .putString(AppConstants.PREF_PASSWORD, mEdPassword.getText().toString())
                 .apply();
 
+        // connect to tap
+        TapManager.getInstance().connectToTap(mTapUUID, mEdPassword.getText().toString());
+
         Intent intent = new Intent(this, LogActivity.class);
-        intent.putExtra(LogActivity.INTENT_PARAM_UUID, mTapUUID);
-        intent.putExtra(LogActivity.INTENT_PARAM_PASS, mEdPassword.getText().toString());
         startActivity(intent);
         finish();
     }

@@ -35,10 +35,7 @@ public class ScanActivity extends Activity {
 
     private ListView mListview;
     private ScanAdapter mAdapter;
-    private boolean mIsScanning;
-    private ArrayList<MyleDevice> mListDevice = new ArrayList<MyleDevice>();
-    private BluetoothAdapter mBluetoothAdapter;
-    private TapManager mTapManager;
+    private ArrayList<MyleDevice> mListDevice = new ArrayList<>();
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -76,24 +73,10 @@ public class ScanActivity extends Activity {
 //            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
 //        }
 
-        //mTapManager = new TapManager(this);
-        //mTapManager.setup();
-        //mTapManager.setTapManagerListener(this);
-
-        //mTapManager.connectToService();
-
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constant.TAP_NOTIFICATION_SCAN));
     }
-//
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//    }
-//
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//    }
+
+
 
     @Override
     protected void onDestroy() {
@@ -114,24 +97,18 @@ public class ScanActivity extends Activity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-//        switch (item.getItemId()) {
-//
-//
-//            case R.id.action_scan:
-//                if (mIsScanning) {
-//                    mTapManager.stopScan();
-//                    item.setTitle(R.string.scan_ac_start_scan);
-//                    mListDevice.clear();
-//                    mAdapter.notifyDataSetChanged();
-//                    mIsScanning = false;
-//                } else {
-//                    mTapManager.startScan();
-//                    item.setTitle(R.string.scan_ac_stop_scan);
-//                    mIsScanning = true;
-//                }
-//
-//                return true;
-//        }
+        switch (item.getItemId()) {
+            case R.id.action_scan:
+                if (TapManager.getInstance().isScanning()) {
+                    TapManager.getInstance().stopScan();
+                    item.setTitle(R.string.scan_ac_start_scan);
+                } else {
+                    TapManager.getInstance().startScan();
+                    item.setTitle(R.string.scan_ac_stop_scan);
+                }
+
+                return true;
+        }
 
 
         return super.onOptionsItemSelected(item);

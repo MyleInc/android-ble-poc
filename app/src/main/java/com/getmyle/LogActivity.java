@@ -21,15 +21,9 @@ import java.util.Calendar;
  */
 
 public class LogActivity extends Activity {
-    private static final String TAG = "LogActivity";
-
-    public static final String INTENT_PARAM_UUID = "uuid";
-    public static final String INTENT_PARAM_PASS = "pass";
 
     private TextView tvLog;
     private Menu mMenu;
-    private String mChoosenDeviceUUID;
-    private String mChoosenDevicePass;
     private TapManager mTapManager;
 
     @Override
@@ -39,8 +33,7 @@ public class LogActivity extends Activity {
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mChoosenDeviceUUID = getIntent().getStringExtra(INTENT_PARAM_UUID);
-        mChoosenDevicePass = getIntent().getStringExtra(INTENT_PARAM_PASS);
+
 
         // TextView
         tvLog = (TextView) findViewById(R.id.tv_log);
@@ -48,13 +41,6 @@ public class LogActivity extends Activity {
         // Setup actionbar
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
         getActionBar().setDisplayHomeAsUpEnabled(true);
-
-        //MyleApplication.TapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
-
-        //mTapManager = new TapManager(this);
-        //mTapManager.setTapManagerListener(this);
-
-        //mTapManager.connectToService();
     }
 
 //    @Override

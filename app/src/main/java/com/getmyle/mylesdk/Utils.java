@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -95,5 +96,17 @@ public class Utils {
 
         return uuids;
     }
+
+
+    public static boolean startsWith(byte[] a, byte[] b) {
+        for (int i = 0; i < b.length; i += 1) {
+            if (i >= a.length || a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
 
 }

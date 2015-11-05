@@ -63,6 +63,20 @@ public class TapManager implements ServiceConnection {
     }
 
 
+    public void startScan() {
+        this.service.startScan();
+    }
+
+
+    public void stopScan() {
+        this.service.stopScan();
+    }
+
+
+    public boolean isScanning() {
+        return this.service.isScanning();
+    }
+
 
     public Collection<BluetoothDevice> getAvailableTaps() {
         return this.service.getAvailableTaps();
@@ -72,5 +86,11 @@ public class TapManager implements ServiceConnection {
     public String getTapName(String address) {
         return this.service.getTapName(address);
     }
+
+
+    public void connectToTap(String address, String password) {
+        this.service.connectToTap(address, password);
+    }
+
 
 }

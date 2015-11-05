@@ -810,10 +810,10 @@ public class MyleService1 extends Service {
         public void onListCharacteristics(List<BluetoothGattCharacteristic> chars) {
             for (BluetoothGattCharacteristic charac : chars) {
                 Log.i(TAG, "characterestic = " + charac.getUuid());
-                if (charac.getUuid().toString().equalsIgnoreCase(Constant.CHARACTERISTIC_UUID_TO_WRITE)) {
+                if (charac.getUuid().equals(Constant.CHARACTERISTIC_UUID_TO_WRITE)) {
                     mWriteCharacter = charac;
                     mWriteCharacter.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-                } else if (charac.getUuid().toString().equalsIgnoreCase(Constant.CHARACTERISTIC_UUID_TO_READ)) {
+                } else if (charac.getUuid().equals(Constant.CHARACTERISTIC_UUID_TO_READ)) {
                     mRecvCharacter = charac;
                     mBleWrapper.setNotificationForCharacteristic(mRecvCharacter, true);
                 }else if(charac.getUuid().toString().equalsIgnoreCase(Constant.BATTERY_LEVEL_UUID)){

@@ -28,8 +28,8 @@ public interface Constant {
     }
 
     UUID SERVICE_UUID = UUID.fromString("14839ac4-7d7e-415c-9a42-167340cf2339");
-    String CHARACTERISTIC_UUID_TO_WRITE = "ba04c4b2-892b-43be-b69c-5d13f2195392";
-    String CHARACTERISTIC_UUID_TO_READ = "0734594a-a8e7-4b1a-a6b1-cd5243059a57";
+    UUID CHARACTERISTIC_UUID_TO_WRITE = UUID.fromString("ba04c4b2-892b-43be-b69c-5d13f2195392");
+    UUID CHARACTERISTIC_UUID_TO_READ = UUID.fromString("0734594a-a8e7-4b1a-a6b1-cd5243059a57");
     String CHARACTERISTIC_UUID_CONFIG1 = "e06d5efb-4f4a-45c0-9eb1-371ae5a14ad4";
     String CHARACTERISTIC_UUID_CONFIG2 = "8b00ace7-eb0b-49b0-bbe9-9aee0a26e1a3";
     String NOTIFICATION_DESCRIPTOR = "00002902-0000-1000-8000-00805f9b34fb";
@@ -39,5 +39,13 @@ public interface Constant {
     String BATTERY_SERVICE_UUID = "0000180F-0000-1000-8000-00805f9b34fb";
 
     String TAP_NOTIFICATION_SCAN = "tap-notification-scan";
-    String TAP_NOTIFICATION_SCAN_PARAM_TAPS = "tap-notification-scan-taps";
+    String TAP_NOTIFICATION_TAP_CONNECTED = "tap-notification-tap-connected";
+    String TAP_NOTIFICATION_TAP_CONNECTED_PARAM = "tap-notification-tap-connected-param";
+    String TAP_NOTIFICATION_TAP_DISCONNECTED = "tap-notification-tap-disconnected";
+    String TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM = "tap-notification-tap-disconnected-param";
+
+
+    byte[] MESSAGE_CONNECTED = new byte[] { 'C', 'O', 'N', 'N', 'E', 'C', 'T', 'E', 'D' };
+    byte[] MESSAGE_FILE_AUDIO = new byte[] { '5', '5', '0', '4', '0' };
+    byte[] MESSAGE_FILE_LOG = new byte[] { '5', '5', '0', '4', '1' };
 }
