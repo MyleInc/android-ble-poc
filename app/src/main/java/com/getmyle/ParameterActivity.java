@@ -2,6 +2,8 @@ package com.getmyle;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
@@ -21,13 +23,52 @@ import com.getmyle.mylesdk.TapManager1;
  * @date: 03/30/2015
  */
 
-public class ParameterActivity extends Activity implements
-        MyleService1.ParameterListener {
+public class ParameterActivity extends Activity {
 
     private EditText mEdRECLN, mEdPAUSELEVEL,
             mEdPAUSELEN, mEdACCELERSENS,
             mEdMIC, mEdPASSWORD,
             mEdBTLOC, mEdUUID, mEdVERSION;
+
+
+    private TapManager.ParameterReadListener listener = new TapManager.ParameterReadListener() {
+        @Override
+        public void onReadIntValue(final String param, final int value) {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (param.equals(Constant.DEVICE_PARAM_RECLN)) {
+                        mEdRECLN.setText("" + value);
+                    } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEVEL)) {
+                        mEdPAUSELEVEL.setText("" + value);
+                    } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEN)) {
+                        mEdPAUSELEN.setText("" + value);
+                    } else if (param.equals(Constant.DEVICE_PARAM_ACCELERSENS)) {
+                        mEdACCELERSENS.setText("" + value);
+                    } else if (param.equals(Constant.DEVICE_PARAM_BTLOC)) {
+                        mEdBTLOC.setText("" + value);
+                    }  else if (param.equals(Constant.DEVICE_PARAM_MIC)) {
+                        mEdMIC.setText("" + value);
+                    }
+                }
+            });
+        }
+        @Override
+        public void onReadStringValue(final String param, final String value) {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (param.equals(Constant.DEVICE_PARAM_VERSION)) {
+                        mEdVERSION.setText(value);
+                    } else if (param.equals(Constant.DEVICE_PARAM_UUID)) {
+                        mEdUUID.setText(value);
+                    }
+                }
+            });
+        }
+    };
 
 
     @Override
@@ -49,27 +90,25 @@ public class ParameterActivity extends Activity implements
         mEdUUID = (EditText) findViewById(R.id.ed_uuid);
         mEdVERSION = (EditText) findViewById(R.id.ed_version);
 
-        //mTapManager = new TapManager1(this);
-        //mTapManager.setTapManagerListener(this);
 
-        //mTapManager.connectToService();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        TapManager.getInstance().addParameterReadListener(listener);
+        readAll();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        TapManager.getInstance().removeParameterReadListener(listener);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        //mTapManager.destroy();
     }
 
 
@@ -84,41 +123,26 @@ public class ParameterActivity extends Activity implements
         return super.onOptionsItemSelected(item);
     }
 
-    public void clickReadAll(View v) throws InterruptedException {
-        // Read RECLN
+    private void readAll() {
         TapManager.getInstance().sendReadRECLN();
-
-        // Read PAUSE_LEVEL
         TapManager.getInstance().sendReadPAUSELEVEL();
-
-        // Read PAUSE_LEN
         TapManager.getInstance().sendReadPAUSELEN();
-
-        // Read ACCELER_SENS
         TapManager.getInstance().sendReadACCELERSENS();
-
-        // Read MIC
         TapManager.getInstance().sendReadMIC();
-
-        // Read BTLOC
         TapManager.getInstance().sendReadBTLOC();
-
-        // Read Version
         TapManager.getInstance().sendReadVERSION();
-
-        // Read Version
         TapManager.getInstance().sendReadUUID();
-
-        // Read password
-        // Set uuid
-        //mEdUUID.setText(Constant.SERVICE_UUID.toString());
 
         // Set password
         String password = PreferenceManager.getDefaultSharedPreferences(this)
                 .getString(AppConstants.PREF_PASSWORD, AppConstants.DEFAULT_PASSWORD);
         mEdPASSWORD.setText(password);
+    }
 
-        Toast.makeText(this, "Read complete", Toast.LENGTH_LONG).show();
+    public void clickReadAll(View v) throws InterruptedException {
+        readAll();
+
+        //Toast.makeText(this, "Read complete", Toast.LENGTH_LONG).show();
     }
 
     public void clickReadBatteryLevel(View v) throws InterruptedException {
@@ -161,28 +185,6 @@ public class ParameterActivity extends Activity implements
                 .apply();
 
         Toast.makeText(this, "Write complete", Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onReceive(String name, int intValue, String strValue) {
-        if (name.equals(Constant.DEVICE_PARAM_RECLN)) {
-            mEdRECLN.setText(strValue);
-        } else if (name.equals(Constant.DEVICE_PARAM_PAUSELEVEL)) {
-            mEdPAUSELEVEL.setText(strValue);
-        } else if (name.equals(Constant.DEVICE_PARAM_PAUSELEN)) {
-            mEdPAUSELEN.setText(strValue);
-        } else if (name.equals(Constant.DEVICE_PARAM_ACCELERSENS)) {
-            mEdACCELERSENS.setText(strValue);
-        } else if (name.equals(Constant.DEVICE_PARAM_BTLOC)) {
-            mEdBTLOC.setText(strValue);
-        } else if (name.equals(Constant.DEVICE_PARAM_VERSION)) {
-            mEdVERSION.setText(strValue);
-        } else if (name.equals(Constant.DEVICE_PARAM_MIC)) {
-            mEdMIC.setText(strValue);
-        }
-    }
-
-    public void clickloct(View v) {
     }
 
 }

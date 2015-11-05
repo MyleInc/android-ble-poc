@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * Created by mikalai on 2015-11-04.
@@ -125,5 +126,20 @@ public class TapManager implements ServiceConnection {
         this.service.sendReadUUID();
     }
 
+
+    public void addParameterReadListener(ParameterReadListener listener) {
+        this.service.addParameterReadListener(listener);
+    }
+
+
+    public void removeParameterReadListener(ParameterReadListener listener){
+        this.service.removeParameterReadListener(listener);
+    }
+
+
+    public static abstract class ParameterReadListener {
+        public void onReadIntValue(String param, int value) {}
+        public void onReadStringValue(String param, String value) {}
+    }
 
 }
