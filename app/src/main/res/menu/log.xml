@@ -18,8 +18,13 @@
                 android:showAsAction="never"/>
 
             <item
-                android:id="@+id/action_forget_device"
-                android:title="@string/log_ac_forget_device"
+                android:id="@+id/action_disconnect"
+                android:title="@string/log_ac_disconnect"
+                android:showAsAction="never"/>
+
+            <item
+                android:id="@+id/action_forget_tap"
+                android:title="@string/log_ac_forget_tap"
                 android:showAsAction="never"/>
 
             <item

@@ -55,6 +55,13 @@ public class MyleBleService extends Service {
     private BluetoothGattCharacteristic writeChrt;
     private BluetoothGattCharacteristic readChrt;
 
+    // the following fields are used to store
+    // current device info, so we can reconnect next
+    // time we see device automatically
+    private String currentTapAddress;
+    private String currentTapPassword;
+
+    // a component that encapsulates file receiving logic
     private FileReceiver fileReceiver = new FileReceiver();
 
     // Android has stupid API for BLE.
@@ -138,6 +145,12 @@ public class MyleBleService extends Service {
 
                 Intent intent = new Intent(Constant.TAP_NOTIFICATION_SCAN);
                 LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+
+                // auto-connect to this tap is it's last remembered
+                if (address.equals(currentTapAddress)) {
+                    Log.i(TAG, "Auto-connecting to " + address);
+                    connectToTap(address, currentTapPassword);
+                }
             }
 
             @Override
@@ -189,6 +202,10 @@ public class MyleBleService extends Service {
 
         this.stopScan();
 
+        // remember current device
+        this.currentTapAddress = address;
+        this.currentTapPassword = password;
+
         // NOTE: we want autoConnect parameter of connectGatt() to be true
         // because for some reason during recording tap is getting disconnected with status 19
         // so we would like it to be auto-connected once recording is done
@@ -196,32 +213,31 @@ public class MyleBleService extends Service {
         this.btGatt = tap.connectGatt(this.getApplication(), autoConnect, new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                // NOTE: there is an interesting case when a tap was connected previously
-                // and is currently recording something, it's getting disconnected with status 19.
-                // Once recorded the tap is reconnected back thanks to autoConnect parameter of connectGatt() above.
-                // So we decided not to consider this as an error.
-                boolean disconnectedForRecording = (status == 19 && newState == BluetoothProfile.STATE_DISCONNECTED);
+                // NOTE: from my experience I found the following on disconnection:
+                // 1. When status == 19, then it means that a tap forces diconeection from its end
+                //      (this can happen for example when the tap is in middle of recording an audio,
+                //      or when password is incorrect)
+                // 2. When status == 8, then it means that the tap is not in range (for example turded off)
 
-                if (status == BluetoothGatt.GATT_SUCCESS || disconnectedForRecording) {
-                    if (newState == BluetoothProfile.STATE_CONNECTED) {
-                        Log.i(TAG, "Connected to tap " + gatt.getDevice().getAddress());
+                if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    Log.i(TAG, "Disconnected from to tap " + gatt.getDevice().getAddress() + " because of reason " + status);
 
-                        btGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+                    Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
+                    intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
+                    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+                } else if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
+                    Log.i(TAG, "Connected to tap " + gatt.getDevice().getAddress());
 
-                        btGatt.discoverServices();
+                    // this speeds things up?
+                    btGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
 
-                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_CONNECTED);
-                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_CONNECTED_PARAM, gatt.getDevice().getAddress());
-                        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
-                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        Log.i(TAG, "Disconnected from to tap " + gatt.getDevice().getAddress());
+                    btGatt.discoverServices();
 
-                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
-                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
-                        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
-                    }
+                    Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_CONNECTED);
+                    intent.putExtra(Constant.TAP_NOTIFICATION_TAP_CONNECTED_PARAM, gatt.getDevice().getAddress());
+                    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                 } else {
-                    Log.i(TAG, "Connection failed with status " + status);
+                    Log.i(TAG, "Connection failed with status " + status + " and newState " + newState);
                 }
             }
 
@@ -395,6 +411,19 @@ public class MyleBleService extends Service {
 
         Log.i(TAG, "Sent UTC time " + Arrays.toString(timeData));
     }
+
+
+    public void disconnectFromCurrentTap() {
+        this.forgetCurrentTap();
+        this.btGatt.disconnect();
+    }
+
+
+    public void forgetCurrentTap() {
+        this.currentTapAddress = null;
+        this.currentTapPassword = null;
+    }
+
 
 
     public void notifyReadParameterListeners(String parameter, int intValue, String stringValue) {

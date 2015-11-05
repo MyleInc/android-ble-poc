@@ -106,10 +106,14 @@ public class LogActivity extends Activity {
                 startActivity(new Intent(this, ParameterActivity.class));
                 break;
 
-            case R.id.action_forget_device:
-                //mTapManager.forgetCurrentDevice();
+            case R.id.action_disconnect:
+                TapManager.getInstance().disconnectFromCurrentTap();
+                break;
 
-                Toast.makeText(this, "Forgot current device", Toast.LENGTH_LONG).show();
+            case R.id.action_forget_tap:
+                TapManager.getInstance().forgetCurrentTap();
+
+                Toast.makeText(this, "Forgot current tap", Toast.LENGTH_LONG).show();
                 break;
 
             case R.id.action_get_num_rev_audio:

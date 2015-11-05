@@ -9,6 +9,7 @@ import android.os.IBinder;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.UUID;
 
 /**
  * Created by mikalai on 2015-11-04.
@@ -91,6 +92,16 @@ public class TapManager implements ServiceConnection {
 
     public void connectToTap(String address, String password) {
         this.service.connectToTap(address, password);
+    }
+
+
+    public void disconnectFromCurrentTap() {
+        this.service.disconnectFromCurrentTap();
+    }
+
+
+    public void forgetCurrentTap() {
+        this.service.forgetCurrentTap();
     }
 
 

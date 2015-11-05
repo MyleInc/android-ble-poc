@@ -21,7 +21,8 @@
 	<string name="log_ac_actionbar_title">Log</string>
 	<string name="log_ac_clear_log">Clear Log</string>
 	<string name="log_ac_parameter">Parameter</string>
-	<string name="log_ac_forget_device">Forget Device</string>
+	<string name="log_ac_forget_tap">Forget Tap</string>
+    <string name="log_ac_disconnect">Disconnect</string>
 	
 	<!-- ParameterActivity -->
 	<string name="RECLN">RECLN</string>
