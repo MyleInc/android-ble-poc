@@ -108,5 +108,24 @@ public class Utils {
     }
 
 
+    public static int toInt(byte[] byteData) {
+        int dv = byteData[2] - 48;
+        int ch = byteData[1] - 48;
+        int ngh = byteData[0] - 48;
+
+        return dv + ch * 10 + ngh * 100;
+    }
+
+
+    public static int extractInt(byte[] raw, byte[] param) {
+        byte[] value = Arrays.copyOfRange(raw, param.length, raw.length);
+        return toInt(value);
+    }
+
+
+    public static String extractString(byte[] raw, byte[] param) {
+        byte[] value = Arrays.copyOfRange(raw, param.length, raw.length);
+        return new String(value);
+    }
 
 }

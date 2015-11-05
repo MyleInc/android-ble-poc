@@ -284,6 +284,30 @@ public class MyleBleService extends Service {
                             Log.i(TAG, "Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
                         }
                     });
+                } else if (Utils.startsWith(value, Constant.MESSAGE_RECLN)) {
+                    int number = Utils.extractInt(value, Constant.MESSAGE_RECLN);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_RECLN, number, null);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEVEL)) {
+                    int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEVEL);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_PAUSELEVEL, number, null);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEN)) {
+                    int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEN);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_PAUSELEN, number, null);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_ACCELERSENS)) {
+                    int number = Utils.extractInt(value, Constant.MESSAGE_ACCELERSENS);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_ACCELERSENS, number, null);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_BTLOC)) {
+                    int number = Utils.extractInt(value, Constant.MESSAGE_BTLOC);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_BTLOC, number, null);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_MIC)) {
+                    int number = Utils.extractInt(value, Constant.MESSAGE_MIC);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_MIC, number, null);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_VERSION)) {
+                    String string = Utils.extractString(value, Constant.MESSAGE_VERSION);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_VERSION, 0, string);
+                } else if (Utils.startsWith(value, Constant.MESSAGE_UUID)) {
+                    String string = Utils.extractString(value, Constant.MESSAGE_UUID);
+                    notifyReadParameterListeners(Constant.DEVICE_PARAM_UUID, 0, string);
                 } else {
                     Log.i(TAG, "onCharacteristicChanged Unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
                 }
@@ -362,6 +386,11 @@ public class MyleBleService extends Service {
     public void send(byte[] data) {
         this.writeChrt.setValue(data);
         this.btGatt.writeCharacteristic(this.writeChrt);
+    }
+
+
+    public void notifyReadParameterListeners(String parameter, int intValue, String stringValue) {
+        Log.i(TAG, "notifyReadParameterListeners " + parameter + " int: " + intValue + ", string:" + stringValue);
     }
 
 
