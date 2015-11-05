@@ -42,7 +42,7 @@ public class ScanActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             Collection<BluetoothDevice> taps = TapManager.getInstance().getAvailableTaps();
             mListDevice.clear();
-            for(BluetoothDevice tap: taps) {
+            for (BluetoothDevice tap : taps) {
                 mListDevice.add(new MyleDevice(tap, TapManager.getInstance().getTapName(tap.getAddress())));
             }
             mAdapter.notifyDataSetChanged();
@@ -72,23 +72,32 @@ public class ScanActivity extends Activity {
 //            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 //            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
 //        }
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constant.TAP_NOTIFICATION_SCAN));
     }
 
 
-
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.scan, menu);
+
+        updateScanMenuItem(menu.getItem(0));
+
         return true;
     }
 
@@ -97,22 +106,31 @@ public class ScanActivity extends Activity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        switch (item.getItemId()) {
-            case R.id.action_scan:
-                if (TapManager.getInstance().isScanning()) {
-                    TapManager.getInstance().stopScan();
-                    item.setTitle(R.string.scan_ac_start_scan);
-                } else {
-                    TapManager.getInstance().startScan();
-                    item.setTitle(R.string.scan_ac_stop_scan);
-                }
+        if (item.getItemId() == R.id.action_scan) {
+            if (TapManager.getInstance().isScanning()) {
+                TapManager.getInstance().stopScan();
+            } else {
+                TapManager.getInstance().startScan();
+            }
 
-                return true;
+            updateScanMenuItem(item);
+
+            return true;
         }
 
 
         return super.onOptionsItemSelected(item);
     }
+
+    private void updateScanMenuItem(MenuItem menuItem) {
+        TapManager tm = TapManager.getInstance();
+        if (tm.isReady() && tm.isScanning()) {
+            menuItem.setTitle(R.string.scan_ac_stop_scan);
+        } else {
+            menuItem.setTitle(R.string.scan_ac_start_scan);
+        }
+    }
+
 
     AdapterView.OnItemClickListener listener = new OnItemClickListener() {
 
@@ -127,36 +145,4 @@ public class ScanActivity extends Activity {
         }
     };
 
-//    @Override
-//    public void onServiceConnected() {
-//        mTapManager.setMyleServiceListener(this);
-//
-//        mTapManager.startScan();
-//    }
-//
-//    @Override
-//    public void onServiceDisconnected() {
-//        mTapManager.removeMyleServiceListener(this);
-//    }
-
-//    @Override
-//    public void onFoundNewDevice(final BluetoothDevice device, final String deviceName) {
-//        Log.i(TAG, "onFoundNewDevice " + device);
-//
-//        mListDevice.add(new MyleDevice(device, deviceName));
-//        mAdapter.notifyDataSetChanged();
-//    }
-
-//    @Override
-//    public void log(String log) {
-//    }
-
-//    @Override
-//    protected void onActivityResult(int arg0, int arg1, Intent arg2) {
-//        if (!mBluetoothAdapter.isEnabled()) {
-//            finish();
-//        }
-//
-//        super.onActivityResult(arg0, arg1, arg2);
-//    }
 }

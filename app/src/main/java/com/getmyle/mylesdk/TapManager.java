@@ -65,6 +65,15 @@ public class TapManager implements ServiceConnection {
     }
 
 
+    /**
+     * Returns true if TapManager is bound to MyleBleService
+     * @return
+     */
+    public boolean isReady() {
+        return this.service != null;
+    }
+
+
     public void startScan() {
         this.service.startScan();
     }
