@@ -18,9 +18,10 @@
 	<string name="scan_ac_stop_scan">Stop Scan</string>
 	
 	<!-- LogActivity -->
-	<string name="log_ac_actionbar_title">Log</string>
+	<string name="log_ac_actionbar_title">Trace Log</string>
 	<string name="log_ac_clear_log">Clear Log</string>
-	<string name="log_ac_parameter">Parameter</string>
+	<string name="log_ac_parameter">View/change params...</string>
+    <string name="log_ac_connect">Connect...</string>
 	<string name="log_ac_forget_tap">Forget Tap</string>
     <string name="log_ac_disconnect">Disconnect</string>
 	

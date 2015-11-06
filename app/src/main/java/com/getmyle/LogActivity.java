@@ -27,7 +27,6 @@ import java.util.Observer;
 public class LogActivity extends Activity implements Observer {
 
     private TextView tvLog;
-    private Menu mMenu;
 
 
     @Override
@@ -35,18 +34,13 @@ public class LogActivity extends Activity implements Observer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-
         // TextView
         tvLog = (TextView) findViewById(R.id.tv_log);
-        if (savedInstanceState != null) {
-            tvLog.setText(savedInstanceState.getString("LOG"));
-        }
 
         // Setup actionbar
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
-        getActionBar().setDisplayHomeAsUpEnabled(true);
 
+        // subscribe to log changes
         MyleApplication.logObservable.addObserver(this);
     }
 
@@ -62,19 +56,18 @@ public class LogActivity extends Activity implements Observer {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.log, menu);
-        mMenu = menu;
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-
             case R.id.action_clear:
                 MyleApplication.logObservable.clear();
+                break;
+
+            case R.id.action_connect:
+                startActivity(new Intent(this, ScanActivity.class));
                 break;
 
             case R.id.action_parameter:
@@ -93,13 +86,6 @@ public class LogActivity extends Activity implements Observer {
                 //int num = mTapManager.getReceiveByteAudio();
                 //Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();
                 break;
-
-            case android.R.id.home:
-                Intent upIntent = NavUtils.getParentActivityIntent(this);
-                upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(upIntent);
-                finish();
-                return true;
         }
 
 

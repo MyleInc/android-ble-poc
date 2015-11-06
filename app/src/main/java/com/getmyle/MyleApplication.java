@@ -14,6 +14,8 @@ import java.util.Observer;
 
 public class MyleApplication extends Application {
 
+    // TapManager log is stored in logObservable to be easily accessed
+    // and notified about changes from other app activities
     public static LogObservable logObservable = new LogObservable();
 
     private static SimpleDateFormat dt = new SimpleDateFormat("mm:ss.SS");

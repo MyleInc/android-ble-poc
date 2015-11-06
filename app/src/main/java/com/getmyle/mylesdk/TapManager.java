@@ -7,6 +7,8 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Looper;
+import android.util.Log;
 
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
@@ -75,6 +77,9 @@ public class TapManager implements ServiceConnection {
      * @return
      */
     private MyleBleService getService() {
+        if (Looper.myLooper() == Looper.getMainLooper() && this.service == null) {
+            Log.e(TapManager.class.getName(), "You have to call your method in another thread in order to be executed once MyleBleService is bound.");
+        }
         try {
             this.latch.await();
         } catch(InterruptedException e) {
