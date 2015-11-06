@@ -65,13 +65,18 @@ public class MyleApplication extends Application {
         public void append(String msg) {
             this.value.insert(0, dt.format(new Date()) + ": " + msg + "\n");
             this.setChanged();
-            this.notifyObservers(value.toString());
+            this.notifyObservers(getValue());
         }
 
         public void clear() {
             this.value = new StringBuilder();
             this.setChanged();
-            this.notifyObservers(value.toString());
+            this.notifyObservers(getValue());
         }
+
+        public String getValue() {
+            return this.value.toString();
+        }
+
     }
 }

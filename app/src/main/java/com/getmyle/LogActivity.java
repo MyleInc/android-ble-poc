@@ -40,6 +40,8 @@ public class LogActivity extends Activity implements Observer {
         // Setup actionbar
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
 
+        tvLog.setText(MyleApplication.logObservable.getValue());
+
         // subscribe to log changes
         MyleApplication.logObservable.addObserver(this);
     }
