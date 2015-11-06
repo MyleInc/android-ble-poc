@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,7 +60,25 @@ public class ScanActivity extends Activity {
         mListview = (ListView) findViewById(R.id.lv_scan_device);
         mAdapter = new ScanAdapter(this, R.layout.scan_device_item, mListDevice);
         mListview.setAdapter(mAdapter);
-        mListview.setOnItemClickListener(listener);
+
+        final Activity me = this;
+
+        mListview.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+                String tapAddress = mAdapter.getItem(position).getDevice().getAddress();
+
+                PreferenceManager.getDefaultSharedPreferences(me)
+                        .edit()
+                        .putString(AppConstants.PREF_ADDRESS, tapAddress)
+                        .apply();
+
+                Intent intent = new Intent(ScanActivity.this, PasswordSettingActivity.class);
+                intent.putExtra(PasswordSettingActivity.INTENT_PARAM_UUID, tapAddress);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         //Check bluetooth is on
         // TODO: move this check to tap manager?
@@ -130,19 +149,5 @@ public class ScanActivity extends Activity {
             menuItem.setTitle(R.string.scan_ac_start_scan);
         }
     }
-
-
-    AdapterView.OnItemClickListener listener = new OnItemClickListener() {
-
-        @Override
-        public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-            String deviceAddress = mAdapter.getItem(position).getDevice().getAddress();
-
-            Intent intent = new Intent(ScanActivity.this, PasswordSettingActivity.class);
-            intent.putExtra(PasswordSettingActivity.INTENT_PARAM_UUID, deviceAddress);
-            startActivity(intent);
-            finish();
-        }
-    };
 
 }

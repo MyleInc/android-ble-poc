@@ -39,6 +39,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class MyleBleService extends Service {
 
+    public static final String INTENT_PARAM_INIT_ADDRESS = "initAddress";
+    public static final String INTENT_PARAM_INIT_PASSWORD = "initPassword";
+
     private static final String TAG = MyleBleService.class.getSimpleName();
 
     private final IBinder binder = new LocalBinder();
@@ -97,13 +100,10 @@ public class MyleBleService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startID) {
+        this.currentTapAddress = intent.getStringExtra(INTENT_PARAM_INIT_ADDRESS);
+        this.currentTapPassword = intent.getStringExtra(INTENT_PARAM_INIT_PASSWORD);
+
         return START_STICKY;
-    }
-
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
 

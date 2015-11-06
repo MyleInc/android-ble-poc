@@ -143,30 +143,8 @@ public class ParameterActivity extends Activity {
         TapManager.getInstance().sendReadVERSION();
         TapManager.getInstance().sendReadUUID();
         TapManager.getInstance().sendReadBatteryLevel();
-
-        // Set password
-        String password = PreferenceManager.getDefaultSharedPreferences(this)
-                .getString(AppConstants.PREF_PASSWORD, AppConstants.DEFAULT_PASSWORD);
-        mEdPASSWORD.setText(password);
     }
 
-    public void clickReadAll(View v) throws InterruptedException {
-        readAll();
-
-        //Toast.makeText(this, "Read complete", Toast.LENGTH_LONG).show();
-    }
-
-    public void clickReadBatteryLevel(View v) throws InterruptedException {
-
-        // Read Battery level
-        //mTapManager.sendReadBATTERY_LEVEL();
-    }
-
-    public void clickEnableBatNotification(View v) throws InterruptedException {
-
-        // Read Battery level
-        //mTapManager.sendEnableBatteryNotification();
-    }
 
     public void clickWriteAll(View v) throws InterruptedException {
         // Write RECLN

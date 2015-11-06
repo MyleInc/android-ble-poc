@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.provider.SyncStateContract;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -27,7 +28,7 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public static void setup(Application app) throws Exception {
+    public static void setup(Application app, String address, String password) throws Exception {
         if (instance != null) { throw new Exception("TapManager is already instanciated"); }
 
         synchronized (TapManager.class) {
@@ -38,6 +39,8 @@ public class TapManager implements ServiceConnection {
 
         // start Myle service
         Intent intent = new Intent(app, MyleBleService.class);
+        intent.putExtra(MyleBleService.INTENT_PARAM_INIT_ADDRESS, address);
+        intent.putExtra(MyleBleService.INTENT_PARAM_INIT_PASSWORD, password);
 
         // service is going to run infinitely in background
         app.startService(intent);
