@@ -87,6 +87,8 @@ public class MyleBleService extends Service {
     private LinkedList<TapManager.CharacteristicValueListener> characteristicValueListeners = new LinkedList<>();
     private LinkedList<TapManager.TraceListener> traceListeners = new LinkedList<>();
 
+    ScanCallback scanCallback;
+
 
 
     @Override
@@ -154,7 +156,7 @@ public class MyleBleService extends Service {
         List<ScanFilter> filters = new ArrayList<>();
 
         // scan for TAPs
-        scanner.startScan(filters, settings, new ScanCallback() {
+        scanner.startScan(filters, settings, this.scanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 // filtering by service UUID above doesn't work
@@ -192,27 +194,22 @@ public class MyleBleService extends Service {
             }
         });
 
-        this.isScanning = true;
         notifyOnTrace("Scan started...");
     }
 
 
     public void stopScan() {
         BluetoothLeScanner scanner = this.btAdapter.getBluetoothLeScanner();
-        scanner.stopScan(new ScanCallback() {
-            @Override
-            public void onScanFailed(int errorCode) {
-                notifyOnTrace("Scan failed with errorCode" + errorCode);
-            }
-        });
+        scanner.stopScan(this.scanCallback);
 
-        this.isScanning = false;
+        this.scanCallback = null;
+
         notifyOnTrace("Scan stopped");
     }
 
 
     public boolean isScanning() {
-        return this.isScanning;
+        return this.scanCallback != null;
     }
 
 
