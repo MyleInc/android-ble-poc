@@ -11,7 +11,11 @@ import android.widget.Toast;
 
 import com.getmyle.mylesdk.TapManager;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Observable;
+import java.util.Observer;
 
 /*
  * Display tasks log.
@@ -20,22 +24,11 @@ import java.util.Calendar;
  * @date: 03/30/2015
  */
 
-public class LogActivity extends Activity {
+public class LogActivity extends Activity implements Observer {
 
     private TextView tvLog;
     private Menu mMenu;
 
-    private TapManager.TraceListener traceListener = new TapManager.TraceListener() {
-        @Override
-        public void onTrace(String msg) {
-            Calendar c = Calendar.getInstance();
-            int seconds = c.get(Calendar.SECOND);
-            int minute = c.get(Calendar.MINUTE);
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-
-            tvLog.append(hour + ":" + minute + ":" + seconds + ": " + msg + "\n");
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,40 +39,24 @@ public class LogActivity extends Activity {
 
         // TextView
         tvLog = (TextView) findViewById(R.id.tv_log);
+        if (savedInstanceState != null) {
+            tvLog.setText(savedInstanceState.getString("LOG"));
+        }
 
         // Setup actionbar
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        // Given that:
-        // 1. Current activity is the first one, so it can happen that MyleBleService is not bound yet to TapManager
-        // 2. TapManager methods are waiting until MyleBleService is bound to it.
-        // 3. MyleBleService is being bound in main thread and current method is on the same thread as well
-        // we cannot call TapManager methods synchronously here, because deadlock would happen:
-        // we would be waiting here for service to bound, but service is not going to bound
-        // because it has to happen on the same thread.
-        // Just to workaroud this specific case we better call TapManager method in another thread.
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                TapManager.getInstance().addTraceListener(traceListener);
-            }
-        }).start();
+        MyleApplication.logObservable.addObserver(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        TapManager.getInstance().removeTraceListener(traceListener);
+        MyleApplication.logObservable.deleteObserver(this);
     }
 
-
-
-    // Clear log
-    public void clickClearLog() {
-        //tvLog.setText("");
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -97,7 +74,7 @@ public class LogActivity extends Activity {
         switch (item.getItemId()) {
 
             case R.id.action_clear:
-                clickClearLog();
+                MyleApplication.logObservable.clear();
                 break;
 
             case R.id.action_parameter:
@@ -110,8 +87,6 @@ public class LogActivity extends Activity {
 
             case R.id.action_forget_tap:
                 TapManager.getInstance().forgetCurrentTap();
-
-                Toast.makeText(this, "Forgot current tap", Toast.LENGTH_LONG).show();
                 break;
 
             case R.id.action_get_num_rev_audio:
@@ -129,5 +104,12 @@ public class LogActivity extends Activity {
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void update(Observable observable, Object data) {
+        if (observable != MyleApplication.logObservable) { return; }
+
+        tvLog.setText(data.toString());
     }
 }

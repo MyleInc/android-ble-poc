@@ -479,6 +479,8 @@ public class MyleBleService extends Service {
     public void forgetCurrentTap() {
         this.currentTapAddress = null;
         this.currentTapPassword = null;
+
+        notifyOnTrace("Forgotten current tap");
     }
 
 
