@@ -104,6 +104,17 @@ public class MyleBleService extends Service {
         this.btManager = (BluetoothManager) this.getBaseContext().getSystemService(Context.BLUETOOTH_SERVICE);
         this.btAdapter = this.btManager.getAdapter();
 
+        if (this.btAdapter == null) {
+            notifyOnTrace("BLE not supported");
+            return;
+        }
+
+        if (!this.btAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            enableBtIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(enableBtIntent);
+        }
+
         this.startScan();
     }
 

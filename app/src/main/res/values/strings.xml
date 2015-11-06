@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">myle</string>
+    <string name="app_name">Myle POC</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     
     <!-- PasswordSettingActivity  -->
-    <string name="passwordsetting_ac_actionbar_title">Launcher</string>
+    <string name="passwordsetting_ac_actionbar_title">Login</string>
 	<string name="passwordsetting_ac_lb1">Current Password</string>
 	<string name="passwordsetting_ac_lb2">This is current password to connect to device. \n
         Modify it to test connect with incorrect password.</string>
 	<string name="passwordsetting_ac_bt">START</string>
 	
 	<!-- ScanActivity -->
-	<string name="scan_ac_actionbar_title">Scan</string>
+	<string name="scan_ac_actionbar_title">Connect</string>
 	<string name="scan_ac_start_scan">Start Scan</string>
 	<string name="scan_ac_stop_scan">Stop Scan</string>
 	

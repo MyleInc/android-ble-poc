@@ -39,6 +39,7 @@ public class MyleApplication extends Application {
             TapManager.setup(this, address, password);
         } catch (Exception e) {
             e.printStackTrace();
+            return;
         }
 
         // Given that:

@@ -32,7 +32,6 @@ import java.util.Collection;
 
 public class ScanActivity extends Activity {
     private static final String TAG = "ScanActivity";
-    private static final int REQUEST_ENABLE_BT = 1234;
 
     private ListView mListview;
     private ScanAdapter mAdapter;
@@ -79,24 +78,14 @@ public class ScanActivity extends Activity {
                 finish();
             }
         });
-
-        //Check bluetooth is on
-        // TODO: move this check to tap manager?
-//        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//        if (mBluetoothAdapter == null) {
-//            Toast.makeText(this, "Device doesn't support BLE", Toast.LENGTH_LONG).show();
-//        }
-//
-//        if (!mBluetoothAdapter.isEnabled()) {
-//            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-//        }
     }
 
 
     @Override
     protected void onStart() {
         super.onStart();
+
+        TapManager.getInstance().startScan();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constant.TAP_NOTIFICATION_SCAN));
     }
@@ -105,6 +94,8 @@ public class ScanActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
+
+        TapManager.getInstance().stopScan();
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
