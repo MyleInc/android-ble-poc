@@ -161,10 +161,25 @@ public class TapManager implements ServiceConnection {
     }
 
 
+    public void addTraceListener(TraceListener listener) {
+        this.service.addTraceListener(listener);
+    }
+
+
+    public void removeTraceListener(TraceListener listener){
+        this.service.removeTraceListener(listener);
+    }
+
+
     public static abstract class CharacteristicValueListener {
         public void onIntValue(String param, int value) {}
         public void onStringValue(String param, String value) {}
         public void onBatteryLevel(int value) {}
+    }
+
+
+    public static abstract class TraceListener {
+        public void onTrace(String msg) {}
     }
 
 }

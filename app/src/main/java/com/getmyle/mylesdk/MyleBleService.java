@@ -81,14 +81,23 @@ public class MyleBleService extends Service {
     // 2, if password is bad, tap disconnects for phone
     private boolean isAuthenticating = false;
 
-    // parameter read listeners
+    // listeners
     private LinkedList<TapManager.CharacteristicValueListener> characteristicValueListeners = new LinkedList<>();
+    private LinkedList<TapManager.TraceListener> traceListeners = new LinkedList<>();
 
 
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // default trace listener logs everything
+        this.addTraceListener(new TapManager.TraceListener() {
+            @Override
+            public void onTrace(String msg) {
+                Log.i(TAG, msg);
+            }
+        });
 
         this.btManager = (BluetoothManager) this.getBaseContext().getSystemService(Context.BLUETOOTH_SERVICE);
         this.btAdapter = this.btManager.getAdapter();
@@ -149,7 +158,7 @@ public class MyleBleService extends Service {
                 }
 
                 String name = Utils.getNameByScanRecord(result.getScanRecord().getBytes());
-                Log.i(TAG, "Found tap " + name + " " + address);
+                notifyOnTrace("Found tap " + name + " " + address);
 
                 availableTaps.put(address, result.getDevice());
                 availableTapNames.put(address, name);
@@ -159,19 +168,19 @@ public class MyleBleService extends Service {
 
                 // auto-connect to this tap is it's last remembered
                 if (address.equals(currentTapAddress)) {
-                    Log.i(TAG, "Auto-connecting to " + address);
+                    notifyOnTrace("Auto-connecting to " + address);
                     connectToTap(address, currentTapPassword);
                 }
             }
 
             @Override
             public void onScanFailed(int errorCode) {
-                Log.i(TAG, "Scan failed with errorCode " + errorCode);
+                notifyOnTrace("Scan failed with errorCode " + errorCode);
             }
         });
 
         this.isScanning = true;
-        Log.i(TAG, "Scan started...");
+        notifyOnTrace("Scan started...");
     }
 
 
@@ -180,12 +189,12 @@ public class MyleBleService extends Service {
         scanner.stopScan(new ScanCallback() {
             @Override
             public void onScanFailed(int errorCode) {
-                Log.i(TAG, "Scan failed with errorCode" + errorCode);
+                notifyOnTrace("Scan failed with errorCode" + errorCode);
             }
         });
 
         this.isScanning = false;
-        Log.i(TAG, "Scan stopped");
+        notifyOnTrace("Scan stopped");
     }
 
 
@@ -234,7 +243,7 @@ public class MyleBleService extends Service {
                     // If we are disconnected during authentication with status 19
                     // then it looks like password didn't match
                     if (isAuthenticating) {
-                        Log.i(TAG, "Password doesn't match");
+                        notifyOnTrace("Password doesn't match");
 
                         isAuthenticating = false;
 
@@ -245,14 +254,14 @@ public class MyleBleService extends Service {
                         intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     } else {
-                        Log.i(TAG, "Disconnected from to tap " + gatt.getDevice().getAddress() + " because of reason " + status);
+                        notifyOnTrace("Disconnected from to tap " + gatt.getDevice().getAddress() + " because of reason " + status);
 
                         Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
                         intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     }
                 } else if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
-                    Log.i(TAG, "Connected to tap " + gatt.getDevice().getAddress());
+                    notifyOnTrace("Connected to tap " + gatt.getDevice().getAddress());
 
                     // this speeds things up?
                     gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
@@ -262,17 +271,17 @@ public class MyleBleService extends Service {
                     // we are still not logically connected - once services are discovered
                     // we will send password for authentication
                 } else {
-                    Log.i(TAG, "Connection failed with status " + status + " and newState " + newState);
+                    notifyOnTrace("Connection failed with status " + status + " and newState " + newState);
                 }
             }
 
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                 if (status != BluetoothGatt.GATT_SUCCESS) {
-                    Log.i(TAG, "Failed discovering services with status " + status);
+                    notifyOnTrace("Failed discovering services with status " + status);
                     return;
                 }
-                Log.i(TAG, "Discovered services");
+                notifyOnTrace("Discovered services");
 
                 // adjust our WRITE characteristic
                 writeChrt = gatt
@@ -304,7 +313,7 @@ public class MyleBleService extends Service {
                         fileReceiver.append(value);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_CONNECTED)) {
                         // tap accepted password this is the last step when tap is considered authenticated
-                        Log.i(TAG, "Password is OK!");
+                        notifyOnTrace("Password is OK!");
 
                         isAuthenticating = false;
 
@@ -315,7 +324,7 @@ public class MyleBleService extends Service {
                         intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTHED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_AUDIO)) {
-                        Log.i(TAG, "Start receiving audio file...");
+                        notifyOnTrace("Start receiving audio file...");
                         fileReceiver.start(new FileReceiver.Callbacks() {
                             @Override
                             public void acknowledge(byte[] ack) {
@@ -326,11 +335,11 @@ public class MyleBleService extends Service {
 
                             @Override
                             public void onComplete(Date time, byte[] buffer, int speed) {
-                                Log.i(TAG, "Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
+                                notifyOnTrace("Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
                             }
                         });
                     } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_LOG)) {
-                        Log.i(TAG, "Start receiving log file...");
+                        notifyOnTrace("Start receiving log file...");
                         fileReceiver.start(new FileReceiver.Callbacks() {
                             @Override
                             public void acknowledge(byte[] ack) {
@@ -341,7 +350,7 @@ public class MyleBleService extends Service {
 
                             @Override
                             public void onComplete(Date time, byte[] buffer, int speed) {
-                                Log.i(TAG, "Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
+                                notifyOnTrace("Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
                             }
                         });
                     } else if (Utils.startsWith(value, Constant.MESSAGE_RECLN)) {
@@ -370,7 +379,7 @@ public class MyleBleService extends Service {
                         notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_UUID, string);
                     }
                 } else {
-                    Log.i(TAG, "onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
+                    notifyOnTrace("onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
                 }
             }
 
@@ -379,7 +388,7 @@ public class MyleBleService extends Service {
                 if (characteristic == batteryChrt) {
                     notifyCharacteristicOnBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
                 } else {
-                    Log.i(TAG, "onCharacteristicRead unhandled read of " + characteristic.getUuid() + " with status " + status + ": " + Arrays.toString(characteristic.getValue()));
+                    notifyOnTrace("onCharacteristicRead unhandled read of " + characteristic.getUuid() + " with status " + status + ": " + Arrays.toString(characteristic.getValue()));
                 }
 
                 // file receiving has nothing to do with writeQueue, so skip processing it
@@ -401,13 +410,13 @@ public class MyleBleService extends Service {
             @Override
             public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                 //super.onDescriptorRead(gatt, descriptor, status);
-                //Log.i(TAG, "onDescriptorRead " + descriptor.getUuid() + " with status " + status + ": " + descriptor.getValue());
+                //notifyOnTrace("onDescriptorRead " + descriptor.getUuid() + " with status " + status + ": " + descriptor.getValue());
             }
 
             @Override
             public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
                 //super.onDescriptorWrite(gatt, descriptor, status);
-                //Log.i(TAG, "onDescriptorWrite " + descriptor.getUuid() + " with status " + status + ": " + descriptor.getValue());
+                //notifyOnTrace("onDescriptorWrite " + descriptor.getUuid() + " with status " + status + ": " + descriptor.getValue());
 
                 // NOTE: for some reason we send password once descriptor for notification was written
                 // send password to tap and wait until confirmation comes back (CONNECTED value in read chrt)
@@ -417,7 +426,7 @@ public class MyleBleService extends Service {
 
         this.chrtProcessingQueue = new ChrtProcessingQueue(this.btGatt);
 
-        Log.i(TAG, "Connecting to tap " + address + "...");
+        notifyOnTrace("Connecting to tap " + address + "...");
     }
 
 
@@ -435,7 +444,7 @@ public class MyleBleService extends Service {
 
         this.chrtProcessingQueue.put(this.writeChrt, data3);
 
-        Log.i(TAG, "Sent password");
+        notifyOnTrace("Sent password");
     }
 
 
@@ -455,7 +464,7 @@ public class MyleBleService extends Service {
 
         this.chrtProcessingQueue.put(this.writeChrt, timeData);
 
-        Log.i(TAG, "Sent UTC time " + Arrays.toString(timeData));
+        notifyOnTrace("Sent UTC time " + Arrays.toString(timeData));
     }
 
 
@@ -551,6 +560,21 @@ public class MyleBleService extends Service {
     private void notifyCharacteristicOnBatteryLevel(int value) {
         for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
             listener.onBatteryLevel(value);
+        }
+    }
+
+
+    public void addTraceListener(TapManager.TraceListener listener) {
+        this.traceListeners.add(listener);
+    }
+
+    public void removeTraceListener(TapManager.TraceListener listener){
+        this.traceListeners.remove(listener);
+    }
+
+    private void notifyOnTrace(String msg) {
+        for (TapManager.TraceListener listener: this.traceListeners) {
+            listener.onTrace(msg);
         }
     }
 
