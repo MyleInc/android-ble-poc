@@ -816,7 +816,7 @@ public class MyleService1 extends Service {
                 } else if (charac.getUuid().equals(Constant.CHARACTERISTIC_UUID_TO_READ)) {
                     mRecvCharacter = charac;
                     mBleWrapper.setNotificationForCharacteristic(mRecvCharacter, true);
-                }else if(charac.getUuid().toString().equalsIgnoreCase(Constant.BATTERY_LEVEL_UUID)){
+                }else if(charac.getUuid().equals(Constant.BATTERY_LEVEL_UUID)){
                     mBatteryLevel = charac;
                    // mBleWrapper.setNotificationForCharacteristic(mBatteryLevel, true);
                 }
@@ -830,7 +830,7 @@ public class MyleService1 extends Service {
                 Log.i(TAG, "Service found = " + service.getUuid());
                 if (service.getUuid().equals(Constant.SERVICE_UUID)) {
                     mBleWrapper.getCharacteristicsForService(service);
-                }else if (service.getUuid().toString().equalsIgnoreCase(Constant.BATTERY_SERVICE_UUID)) {
+                }else if (service.getUuid().equals(Constant.BATTERY_SERVICE_UUID)) {
                     mBleWrapper.getCharacteristicsForService(service);
                 }
             }

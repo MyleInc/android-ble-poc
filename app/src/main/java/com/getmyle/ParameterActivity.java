@@ -28,7 +28,8 @@ public class ParameterActivity extends Activity {
     private EditText mEdRECLN, mEdPAUSELEVEL,
             mEdPAUSELEN, mEdACCELERSENS,
             mEdMIC, mEdPASSWORD,
-            mEdBTLOC, mEdUUID, mEdVERSION;
+            mEdBTLOC, mEdUUID, mEdVERSION,
+            mEdBattery;
 
 
     private TapManager.ParameterReadListener listener = new TapManager.ParameterReadListener() {
@@ -68,6 +69,16 @@ public class ParameterActivity extends Activity {
                 }
             });
         }
+        @Override
+        public void onReadBatteryLevel(final int value) {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mEdBattery.setText("" + value);
+                }
+            });
+        }
     };
 
 
@@ -89,8 +100,7 @@ public class ParameterActivity extends Activity {
         mEdBTLOC = (EditText) findViewById(R.id.ed_btloc);
         mEdUUID = (EditText) findViewById(R.id.ed_uuid);
         mEdVERSION = (EditText) findViewById(R.id.ed_version);
-
-
+        mEdBattery = (EditText) findViewById(R.id.ed_battery);
     }
 
     @Override
@@ -132,6 +142,7 @@ public class ParameterActivity extends Activity {
         TapManager.getInstance().sendReadBTLOC();
         TapManager.getInstance().sendReadVERSION();
         TapManager.getInstance().sendReadUUID();
+        TapManager.getInstance().sendReadBatteryLevel();
 
         // Set password
         String password = PreferenceManager.getDefaultSharedPreferences(this)

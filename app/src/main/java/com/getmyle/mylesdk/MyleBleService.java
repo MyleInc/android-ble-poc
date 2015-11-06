@@ -54,6 +54,7 @@ public class MyleBleService extends Service {
 
     private BluetoothGattCharacteristic writeChrt;
     private BluetoothGattCharacteristic readChrt;
+    private BluetoothGattCharacteristic batteryChrt;
 
     // the following fields are used to store
     // current device info, so we can reconnect next
@@ -66,16 +67,21 @@ public class MyleBleService extends Service {
 
     // Android has stupid API for BLE.
     // It can happen that during writing subsequent values into a characteristic
-    // some of them won't be processed.
+    // some of them won't be processed. Even reading and writing characteristic
+    // at the same time can conflict.
     // That's why we implement our own queue, to handle that.
     // NOTE: file receiving writes go directly to characteristic to speed things up.
-    ConcurrentLinkedQueue<byte[]> writeQueue = new ConcurrentLinkedQueue<>();
+    private ChrtProcessingQueue chrtProcessingQueue;
 
     // a flag to track period when password is send and response received.
     // Response can have two types:
     // 1. if password is good, "CONNECTED" message is returned
     // 2, if password is bad, tap disconnects for phone
     private boolean isAuthenticating = false;
+
+    // parameter read listeners
+    private LinkedList<TapManager.ParameterReadListener> parameterReadListeners = new LinkedList<>();
+
 
 
     @Override
@@ -161,7 +167,7 @@ public class MyleBleService extends Service {
 
             @Override
             public void onScanFailed(int errorCode) {
-                Log.i(TAG, "Scan failed with errorCode" + errorCode);
+                Log.i(TAG, "Scan failed with errorCode " + errorCode);
             }
         });
 
@@ -275,92 +281,95 @@ public class MyleBleService extends Service {
                         .getCharacteristic(Constant.CHARACTERISTIC_UUID_TO_WRITE);
                 writeChrt.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
-                // enable notifications for our READ characteristic
+                // read characteristic
                 readChrt = gatt
                         .getService(Constant.SERVICE_UUID)
                         .getCharacteristic(Constant.CHARACTERISTIC_UUID_TO_READ);
-                gatt.setCharacteristicNotification(readChrt, true);
+                enableChrtNotification(readChrt, true);
 
-                BluetoothGattDescriptor descriptor = readChrt.getDescriptor(UUID.fromString(Constant.NOTIFICATION_DESCRIPTOR));
-                if (descriptor != null) {
-                    byte[] val = true ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
-                    descriptor.setValue(val);
-                    gatt.writeDescriptor(descriptor);
-                }
+                // battery level characteristic
+                batteryChrt = gatt
+                        .getService(Constant.BATTERY_SERVICE_UUID)
+                        .getCharacteristic(Constant.BATTERY_LEVEL_UUID);
+                enableChrtNotification(batteryChrt, true);
             }
 
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                 byte[] value = characteristic.getValue();
 
-                if (fileReceiver.isInProgress()) {
-                    fileReceiver.append(value);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_CONNECTED)) {
-                    // tap accepted password this is the last step when tap is considered connected
-                    Log.i(TAG, "Password is OK!");
+                if (characteristic == batteryChrt) {
+                    notifyReadBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                } else if (characteristic == readChrt) {
+                    if (fileReceiver.isInProgress()) {
+                        fileReceiver.append(value);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_CONNECTED)) {
+                        // tap accepted password this is the last step when tap is considered authenticated
+                        Log.i(TAG, "Password is OK!");
 
-                    isAuthenticating = false;
+                        isAuthenticating = false;
 
-                    sendTime();
+                        sendTime();
 
-                    // notify about connected tap
-                    Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTHED);
-                    intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTHED_PARAM, gatt.getDevice().getAddress());
-                    LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_AUDIO)) {
-                    Log.i(TAG, "Start receiving audio file...");
-                    fileReceiver.start(new FileReceiver.Callbacks() {
-                        @Override
-                        public void acknowledge(byte[] ack) {
-                            // write directly avoiding writeQueue to speed things up in file transfer
-                            writeChrt.setValue(ack);
-                            btGatt.writeCharacteristic(writeChrt);
-                        }
+                        // notify about connected tap
+                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTHED);
+                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTHED_PARAM, gatt.getDevice().getAddress());
+                        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_AUDIO)) {
+                        Log.i(TAG, "Start receiving audio file...");
+                        fileReceiver.start(new FileReceiver.Callbacks() {
+                            @Override
+                            public void acknowledge(byte[] ack) {
+                                // write directly avoiding writeQueue to speed things up in file transfer
+                                writeChrt.setValue(ack);
+                                btGatt.writeCharacteristic(writeChrt);
+                            }
 
-                        @Override
-                        public void onComplete(Date time, byte[] buffer, int speed) {
-                            Log.i(TAG, "Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
-                        }
-                    });
-                } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_LOG)) {
-                    Log.i(TAG, "Start receiving log file...");
-                    fileReceiver.start(new FileReceiver.Callbacks() {
-                        @Override
-                        public void acknowledge(byte[] ack) {
-                            // write directly avoiding writeQueue to speed things up in file transfer
-                            writeChrt.setValue(ack);
-                            btGatt.writeCharacteristic(writeChrt);
-                        }
+                            @Override
+                            public void onComplete(Date time, byte[] buffer, int speed) {
+                                Log.i(TAG, "Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
+                            }
+                        });
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_LOG)) {
+                        Log.i(TAG, "Start receiving log file...");
+                        fileReceiver.start(new FileReceiver.Callbacks() {
+                            @Override
+                            public void acknowledge(byte[] ack) {
+                                // write directly avoiding writeQueue to speed things up in file transfer
+                                writeChrt.setValue(ack);
+                                btGatt.writeCharacteristic(writeChrt);
+                            }
 
-                        @Override
-                        public void onComplete(Date time, byte[] buffer, int speed) {
-                            Log.i(TAG, "Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
-                        }
-                    });
-                } else if (Utils.startsWith(value, Constant.MESSAGE_RECLN)) {
-                    int number = Utils.extractInt(value, Constant.MESSAGE_RECLN);
-                    notifyReadIntValue(Constant.DEVICE_PARAM_RECLN, number);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEVEL)) {
-                    int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEVEL);
-                    notifyReadIntValue(Constant.DEVICE_PARAM_PAUSELEVEL, number);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEN)) {
-                    int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEN);
-                    notifyReadIntValue(Constant.DEVICE_PARAM_PAUSELEN, number);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_ACCELERSENS)) {
-                    int number = Utils.extractInt(value, Constant.MESSAGE_ACCELERSENS);
-                    notifyReadIntValue(Constant.DEVICE_PARAM_ACCELERSENS, number);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_BTLOC)) {
-                    int number = Utils.extractInt(value, Constant.MESSAGE_BTLOC);
-                    notifyReadIntValue(Constant.DEVICE_PARAM_BTLOC, number);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_MIC)) {
-                    int number = Utils.extractInt(value, Constant.MESSAGE_MIC);
-                    notifyReadIntValue(Constant.DEVICE_PARAM_MIC, number);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_VERSION)) {
-                    String string = Utils.extractString(value, Constant.MESSAGE_VERSION);
-                    notifyReadStringValue(Constant.DEVICE_PARAM_VERSION, string);
-                } else if (Utils.startsWith(value, Constant.MESSAGE_UUID)) {
-                    String string = Utils.extractString(value, Constant.MESSAGE_UUID);
-                    notifyReadStringValue(Constant.DEVICE_PARAM_UUID, string);
+                            @Override
+                            public void onComplete(Date time, byte[] buffer, int speed) {
+                                Log.i(TAG, "Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
+                            }
+                        });
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_RECLN)) {
+                        int number = Utils.extractInt(value, Constant.MESSAGE_RECLN);
+                        notifyReadIntValue(Constant.DEVICE_PARAM_RECLN, number);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEVEL)) {
+                        int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEVEL);
+                        notifyReadIntValue(Constant.DEVICE_PARAM_PAUSELEVEL, number);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEN)) {
+                        int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEN);
+                        notifyReadIntValue(Constant.DEVICE_PARAM_PAUSELEN, number);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_ACCELERSENS)) {
+                        int number = Utils.extractInt(value, Constant.MESSAGE_ACCELERSENS);
+                        notifyReadIntValue(Constant.DEVICE_PARAM_ACCELERSENS, number);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_BTLOC)) {
+                        int number = Utils.extractInt(value, Constant.MESSAGE_BTLOC);
+                        notifyReadIntValue(Constant.DEVICE_PARAM_BTLOC, number);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_MIC)) {
+                        int number = Utils.extractInt(value, Constant.MESSAGE_MIC);
+                        notifyReadIntValue(Constant.DEVICE_PARAM_MIC, number);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_VERSION)) {
+                        String string = Utils.extractString(value, Constant.MESSAGE_VERSION);
+                        notifyReadStringValue(Constant.DEVICE_PARAM_VERSION, string);
+                    } else if (Utils.startsWith(value, Constant.MESSAGE_UUID)) {
+                        String string = Utils.extractString(value, Constant.MESSAGE_UUID);
+                        notifyReadStringValue(Constant.DEVICE_PARAM_UUID, string);
+                    }
                 } else {
                     Log.i(TAG, "onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
                 }
@@ -368,20 +377,26 @@ public class MyleBleService extends Service {
 
             @Override
             public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                //super.onCharacteristicRead(gatt, characteristic, status);
-                Log.i(TAG, "onCharacteristicRead " + characteristic.getUuid() + " with status " + status + ": " + characteristic.getStringValue(0));
+                if (characteristic == batteryChrt) {
+                    notifyReadBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                } else {
+                    Log.i(TAG, "onCharacteristicRead unhandled read of " + characteristic.getUuid() + " with status " + status + ": " + Arrays.toString(characteristic.getValue()));
+                }
+
+                // file receiving has nothing to do with writeQueue, so skip processing it
+                if (!fileReceiver.isInProgress()) {
+                    // this is not file receiving - check maybe we have something more to write
+                    chrtProcessingQueue.processNext();
+                }
             }
 
             @Override
             public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                //super.onCharacteristicWrite(gatt, characteristic, status);
-                //Log.i(TAG, "onCharacteristicWrite " + characteristic.getUuid() + " with status " + status + ": " + characteristic.getStringValue(0));
-
                 // file receiving has nothing to do with writeQueue, so skip processing it
-                if (fileReceiver.isInProgress()) { return; }
-
-                // this is not file receiving - check maybe we have something more to write
-                processWriteQueue();
+                if (!fileReceiver.isInProgress()) {
+                    // this is not file receiving - check maybe we have something more to write
+                    chrtProcessingQueue.processNext();
+                }
             }
 
             @Override
@@ -401,6 +416,8 @@ public class MyleBleService extends Service {
             }
         });
 
+        this.chrtProcessingQueue = new ChrtProcessingQueue(this.btGatt);
+
         Log.i(TAG, "Connecting to tap " + address + "...");
     }
 
@@ -409,7 +426,6 @@ public class MyleBleService extends Service {
      * Send password to tap
      */
     private void sendPassword(String password) {
-
         byte data1[] = new byte[]{'5', '5', '0', '1', (byte) password.length()};
         byte data2[] = password.getBytes();
         byte data3[] = new byte[data1.length + data2.length];
@@ -418,7 +434,7 @@ public class MyleBleService extends Service {
 
         this.isAuthenticating = true;
 
-        addToWriteQueue(data3);
+        this.chrtProcessingQueue.put(this.writeChrt, data3);
 
         Log.i(TAG, "Sent password");
     }
@@ -438,7 +454,7 @@ public class MyleBleService extends Service {
 
         byte[] timeData = new byte[]{'5', '5', '0', '0', second, minute, hour, date, month, year};
 
-        addToWriteQueue(timeData);
+        this.chrtProcessingQueue.put(this.writeChrt, timeData);
 
         Log.i(TAG, "Sent UTC time " + Arrays.toString(timeData));
     }
@@ -456,79 +472,63 @@ public class MyleBleService extends Service {
     }
 
 
+    /**
+     * Enables notification for a characteristic.
+     * @param chrt
+     * @param enable
+     */
+    private void enableChrtNotification(BluetoothGattCharacteristic chrt, boolean enable) {
+        this.btGatt.setCharacteristicNotification(chrt, enable);
 
-    public void notifyReadParameterListeners(String parameter, int intValue, String stringValue) {
-        Log.i(TAG, "notifyReadParameterListeners " + parameter + " int: " + intValue + ", string:" + stringValue);
+        BluetoothGattDescriptor descriptor = readChrt.getDescriptor(UUID.fromString(Constant.NOTIFICATION_DESCRIPTOR));
+        if (descriptor != null) {
+            byte[] val = enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
+            descriptor.setValue(val);
+            this.btGatt.writeDescriptor(descriptor);
+        }
     }
+
+
 
 
     public void sendReadRECLN() {
-        addToWriteQueue(Constant.MESSAGE_RECLN);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_RECLN);
     }
 
     public void sendReadBTLOC() {
-        addToWriteQueue(Constant.MESSAGE_BTLOC);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_BTLOC);
     }
 
     public void sendReadPAUSELEVEL() {
-        addToWriteQueue(Constant.MESSAGE_PAUSELEVEL);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_PAUSELEVEL);
     }
 
     public void sendReadPAUSELEN() {
-        addToWriteQueue(Constant.MESSAGE_PAUSELEN);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_PAUSELEN);
     }
 
     public void sendReadACCELERSENS() {
-        addToWriteQueue(Constant.MESSAGE_ACCELERSENS);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_ACCELERSENS);
     }
 
     public void sendReadMIC() {
-        addToWriteQueue(Constant.MESSAGE_MIC);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_MIC);
     }
 
     public void sendReadVERSION() {
-        addToWriteQueue(Constant.MESSAGE_VERSION);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_VERSION);
     }
 
     public void sendReadUUID() {
-        addToWriteQueue(Constant.MESSAGE_UUID);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_UUID);
+    }
+
+    public void sendReadBatteryLevel() {
+        this.chrtProcessingQueue.put(this.batteryChrt);
     }
 
 
-    /**
-     * Adds a write request to queue.
-     * If queue is empty, then write to characteristic right away.
-     * IF queue is not empty, then processing of givenrequests will be handled in processWriteQueue().
-     * @param request
-     */
-    private void addToWriteQueue(byte[] request) {
-        synchronized (writeQueue) {
-            boolean isEmpty = writeQueue.isEmpty();
-            writeQueue.add(request);
-            if (isEmpty) {
-                this.writeChrt.setValue(request);
-                this.btGatt.writeCharacteristic(this.writeChrt);
-            }
-        }
-    }
 
-
-    /**
-     * Removes head from queue and write next request.
-     */
-    private void processWriteQueue() {
-        synchronized (writeQueue) {
-            writeQueue.poll(); // this item has just been processed
-
-            if (!writeQueue.isEmpty()) {
-                this.writeChrt.setValue(writeQueue.peek());
-                this.btGatt.writeCharacteristic(this.writeChrt);
-            }
-        }
-    }
-
-
-    LinkedList<TapManager.ParameterReadListener> parameterReadListeners = new LinkedList<>();
 
     public void addParameterReadListener(TapManager.ParameterReadListener listener) {
         this.parameterReadListeners.add(listener);
@@ -548,6 +548,12 @@ public class MyleBleService extends Service {
     private void notifyReadStringValue(String param, String value) {
         for (TapManager.ParameterReadListener listener: this.parameterReadListeners) {
             listener.onReadStringValue(param, value);
+        }
+    }
+
+    private void notifyReadBatteryLevel(int value) {
+        for (TapManager.ParameterReadListener listener: this.parameterReadListeners) {
+            listener.onReadBatteryLevel(value);
         }
     }
 

@@ -146,6 +146,10 @@ public class TapManager implements ServiceConnection {
         this.service.sendReadUUID();
     }
 
+    public void sendReadBatteryLevel() {
+        this.service.sendReadBatteryLevel();
+    }
+
 
     public void addParameterReadListener(ParameterReadListener listener) {
         this.service.addParameterReadListener(listener);
@@ -160,6 +164,7 @@ public class TapManager implements ServiceConnection {
     public static abstract class ParameterReadListener {
         public void onReadIntValue(String param, int value) {}
         public void onReadStringValue(String param, String value) {}
+        public void onReadBatteryLevel(int value) {}
     }
 
 }
