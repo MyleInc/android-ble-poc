@@ -12,9 +12,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.getmyle.mylesdk.Constant;
-import com.getmyle.mylesdk.MyleService1;
 import com.getmyle.mylesdk.TapManager;
-import com.getmyle.mylesdk.TapManager1;
 
 /*
  * Write & read parameters
@@ -32,9 +30,9 @@ public class ParameterActivity extends Activity {
             mEdBattery;
 
 
-    private TapManager.ParameterReadListener listener = new TapManager.ParameterReadListener() {
+    private TapManager.CharacteristicValueListener listener = new TapManager.CharacteristicValueListener() {
         @Override
-        public void onReadIntValue(final String param, final int value) {
+        public void onIntValue(final String param, final int value) {
             Handler mainHandler = new Handler(Looper.getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override
@@ -56,7 +54,7 @@ public class ParameterActivity extends Activity {
             });
         }
         @Override
-        public void onReadStringValue(final String param, final String value) {
+        public void onStringValue(final String param, final String value) {
             Handler mainHandler = new Handler(Looper.getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override
@@ -70,7 +68,7 @@ public class ParameterActivity extends Activity {
             });
         }
         @Override
-        public void onReadBatteryLevel(final int value) {
+        public void onBatteryLevel(final int value) {
             Handler mainHandler = new Handler(Looper.getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override
@@ -106,14 +104,14 @@ public class ParameterActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        TapManager.getInstance().addParameterReadListener(listener);
+        TapManager.getInstance().addCharacteristicValueListener(listener);
         readAll();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        TapManager.getInstance().removeParameterReadListener(listener);
+        TapManager.getInstance().removeCharacteristicValueListener(listener);
     }
 
     @Override
@@ -134,15 +132,15 @@ public class ParameterActivity extends Activity {
     }
 
     private void readAll() {
-        TapManager.getInstance().sendReadRECLN();
-        TapManager.getInstance().sendReadPAUSELEVEL();
-        TapManager.getInstance().sendReadPAUSELEN();
-        TapManager.getInstance().sendReadACCELERSENS();
-        TapManager.getInstance().sendReadMIC();
-        TapManager.getInstance().sendReadBTLOC();
-        TapManager.getInstance().sendReadVERSION();
-        TapManager.getInstance().sendReadUUID();
-        TapManager.getInstance().sendReadBatteryLevel();
+        TapManager.getInstance().readRECLN();
+        TapManager.getInstance().readPAUSELEVEL();
+        TapManager.getInstance().readPAUSELEN();
+        TapManager.getInstance().readACCELERSENS();
+        TapManager.getInstance().readMIC();
+        TapManager.getInstance().readBTLOC();
+        TapManager.getInstance().readVERSION();
+        TapManager.getInstance().readUUID();
+        TapManager.getInstance().readBatteryLevel();
     }
 
 

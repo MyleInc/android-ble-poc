@@ -6,11 +6,8 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.provider.SyncStateContract;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.UUID;
 
 /**
  * Created by mikalai on 2015-11-04.
@@ -117,57 +114,57 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public void sendReadRECLN() {
-        this.service.sendReadRECLN();
+    public void readRECLN() {
+        this.service.readRECLN();
     }
 
-    public void sendReadBTLOC() {
-        this.service.sendReadBTLOC();
+    public void readBTLOC() {
+        this.service.readBTLOC();
     }
 
-    public void sendReadPAUSELEVEL() {
-        this.service.sendReadPAUSELEVEL();
+    public void readPAUSELEVEL() {
+        this.service.readPAUSELEVEL();
     }
 
-    public void sendReadPAUSELEN() {
-        this.service.sendReadPAUSELEN();
+    public void readPAUSELEN() {
+        this.service.readPAUSELEN();
     }
 
-    public void sendReadACCELERSENS() {
-        this.service.sendReadACCELERSENS();
+    public void readACCELERSENS() {
+        this.service.readACCELERSENS();
     }
 
-    public void sendReadMIC() {
-        this.service.sendReadMIC();
+    public void readMIC() {
+        this.service.readMIC();
     }
 
-    public void sendReadVERSION() {
-        this.service.sendReadVERSION();
+    public void readVERSION() {
+        this.service.readVERSION();
     }
 
-    public void sendReadUUID() {
-        this.service.sendReadUUID();
+    public void readUUID() {
+        this.service.readUUID();
     }
 
-    public void sendReadBatteryLevel() {
-        this.service.sendReadBatteryLevel();
-    }
-
-
-    public void addParameterReadListener(ParameterReadListener listener) {
-        this.service.addParameterReadListener(listener);
+    public void readBatteryLevel() {
+        this.service.readBatteryLevel();
     }
 
 
-    public void removeParameterReadListener(ParameterReadListener listener){
-        this.service.removeParameterReadListener(listener);
+    public void addCharacteristicValueListener(CharacteristicValueListener listener) {
+        this.service.addCharacteristicValueListener(listener);
     }
 
 
-    public static abstract class ParameterReadListener {
-        public void onReadIntValue(String param, int value) {}
-        public void onReadStringValue(String param, String value) {}
-        public void onReadBatteryLevel(int value) {}
+    public void removeCharacteristicValueListener(CharacteristicValueListener listener){
+        this.service.removeCharacteristicValueListener(listener);
+    }
+
+
+    public static abstract class CharacteristicValueListener {
+        public void onIntValue(String param, int value) {}
+        public void onStringValue(String param, String value) {}
+        public void onBatteryLevel(int value) {}
     }
 
 }

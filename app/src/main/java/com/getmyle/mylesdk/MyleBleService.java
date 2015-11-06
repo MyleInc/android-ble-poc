@@ -32,7 +32,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by mikalai on 2015-11-04.
@@ -83,7 +82,7 @@ public class MyleBleService extends Service {
     private boolean isAuthenticating = false;
 
     // parameter read listeners
-    private LinkedList<TapManager.ParameterReadListener> parameterReadListeners = new LinkedList<>();
+    private LinkedList<TapManager.CharacteristicValueListener> characteristicValueListeners = new LinkedList<>();
 
 
 
@@ -299,7 +298,7 @@ public class MyleBleService extends Service {
                 byte[] value = characteristic.getValue();
 
                 if (characteristic == batteryChrt) {
-                    notifyReadBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                    notifyCharacteristicOnBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
                 } else if (characteristic == readChrt) {
                     if (fileReceiver.isInProgress()) {
                         fileReceiver.append(value);
@@ -347,28 +346,28 @@ public class MyleBleService extends Service {
                         });
                     } else if (Utils.startsWith(value, Constant.MESSAGE_RECLN)) {
                         int number = Utils.extractInt(value, Constant.MESSAGE_RECLN);
-                        notifyReadIntValue(Constant.DEVICE_PARAM_RECLN, number);
+                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_RECLN, number);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEVEL)) {
                         int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEVEL);
-                        notifyReadIntValue(Constant.DEVICE_PARAM_PAUSELEVEL, number);
+                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_PAUSELEVEL, number);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEN)) {
                         int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEN);
-                        notifyReadIntValue(Constant.DEVICE_PARAM_PAUSELEN, number);
+                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_PAUSELEN, number);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_ACCELERSENS)) {
                         int number = Utils.extractInt(value, Constant.MESSAGE_ACCELERSENS);
-                        notifyReadIntValue(Constant.DEVICE_PARAM_ACCELERSENS, number);
+                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_ACCELERSENS, number);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_BTLOC)) {
                         int number = Utils.extractInt(value, Constant.MESSAGE_BTLOC);
-                        notifyReadIntValue(Constant.DEVICE_PARAM_BTLOC, number);
+                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_BTLOC, number);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_MIC)) {
                         int number = Utils.extractInt(value, Constant.MESSAGE_MIC);
-                        notifyReadIntValue(Constant.DEVICE_PARAM_MIC, number);
+                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_MIC, number);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_VERSION)) {
                         String string = Utils.extractString(value, Constant.MESSAGE_VERSION);
-                        notifyReadStringValue(Constant.DEVICE_PARAM_VERSION, string);
+                        notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_VERSION, string);
                     } else if (Utils.startsWith(value, Constant.MESSAGE_UUID)) {
                         String string = Utils.extractString(value, Constant.MESSAGE_UUID);
-                        notifyReadStringValue(Constant.DEVICE_PARAM_UUID, string);
+                        notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_UUID, string);
                     }
                 } else {
                     Log.i(TAG, "onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
@@ -378,7 +377,7 @@ public class MyleBleService extends Service {
             @Override
             public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                 if (characteristic == batteryChrt) {
-                    notifyReadBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                    notifyCharacteristicOnBatteryLevel(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
                 } else {
                     Log.i(TAG, "onCharacteristicRead unhandled read of " + characteristic.getUuid() + " with status " + status + ": " + Arrays.toString(characteristic.getValue()));
                 }
@@ -491,69 +490,67 @@ public class MyleBleService extends Service {
 
 
 
-    public void sendReadRECLN() {
+    public void readRECLN() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_RECLN);
     }
 
-    public void sendReadBTLOC() {
+    public void readBTLOC() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_BTLOC);
     }
 
-    public void sendReadPAUSELEVEL() {
+    public void readPAUSELEVEL() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_PAUSELEVEL);
     }
 
-    public void sendReadPAUSELEN() {
+    public void readPAUSELEN() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_PAUSELEN);
     }
 
-    public void sendReadACCELERSENS() {
+    public void readACCELERSENS() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_ACCELERSENS);
     }
 
-    public void sendReadMIC() {
+    public void readMIC() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_MIC);
     }
 
-    public void sendReadVERSION() {
+    public void readVERSION() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_VERSION);
     }
 
-    public void sendReadUUID() {
+    public void readUUID() {
         this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_UUID);
     }
 
-    public void sendReadBatteryLevel() {
+    public void readBatteryLevel() {
         this.chrtProcessingQueue.put(this.batteryChrt);
     }
 
 
 
-
-    public void addParameterReadListener(TapManager.ParameterReadListener listener) {
-        this.parameterReadListeners.add(listener);
+    public void addCharacteristicValueListener(TapManager.CharacteristicValueListener listener) {
+        this.characteristicValueListeners.add(listener);
     }
 
-
-    public void removeParameterReadListener(TapManager.ParameterReadListener listener){
-        this.parameterReadListeners.remove(listener);
+    public void removeCharacteristicValueListener(TapManager.CharacteristicValueListener listener){
+        this.characteristicValueListeners.remove(listener);
     }
 
-    private void notifyReadIntValue(String param, int value) {
-        for (TapManager.ParameterReadListener listener: this.parameterReadListeners) {
-            listener.onReadIntValue(param, value);
+    private void notifyCharacteristicOnIntValue(String param, int value) {
+        for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
+            listener.onIntValue(param, value);
         }
     }
 
-    private void notifyReadStringValue(String param, String value) {
-        for (TapManager.ParameterReadListener listener: this.parameterReadListeners) {
-            listener.onReadStringValue(param, value);
+    private void notifyCharacteristicOnStringValue(String param, String value) {
+        for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
+            listener.onStringValue(param, value);
         }
     }
 
-    private void notifyReadBatteryLevel(int value) {
-        for (TapManager.ParameterReadListener listener: this.parameterReadListeners) {
-            listener.onReadBatteryLevel(value);
+    private void notifyCharacteristicOnBatteryLevel(int value) {
+        for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
+            listener.onBatteryLevel(value);
         }
     }
 
