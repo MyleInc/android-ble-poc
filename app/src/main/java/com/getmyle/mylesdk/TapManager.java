@@ -1,6 +1,7 @@
 package com.getmyle.mylesdk;
 
 import android.app.Application;
+import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by mikalai on 2015-11-04.
@@ -16,8 +18,10 @@ public class TapManager implements ServiceConnection {
 
     private static volatile TapManager instance;
 
-    Application app;
-    MyleBleService service;
+    private Application app;
+    private MyleBleService service;
+
+    private final CountDownLatch latch = new CountDownLatch(1);
 
 
     TapManager(Application app) {
@@ -25,7 +29,7 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public static void setup(Application app, String address, String password) throws Exception {
+    public static void setup(final Application app, final String address, final String password) throws Exception {
         if (instance != null) { throw new Exception("TapManager is already instanciated"); }
 
         synchronized (TapManager.class) {
@@ -57,6 +61,7 @@ public class TapManager implements ServiceConnection {
     public void onServiceConnected(ComponentName name, IBinder binder) {
         MyleBleService.LocalBinder localBinder = (MyleBleService.LocalBinder) binder;
         this.service = localBinder.getServerInstance();
+        this.latch.countDown();
     }
 
 
@@ -66,108 +71,113 @@ public class TapManager implements ServiceConnection {
 
 
     /**
-     * Returns true if TapManager is bound to MyleBleService
+     * NOTE: we wait for service to be available on current thread.
      * @return
      */
-    public boolean isReady() {
-        return this.service != null;
+    private MyleBleService getService() {
+        try {
+            this.latch.await();
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        return this.service;
     }
 
 
     public void startScan() {
-        this.service.startScan();
+        getService().startScan();
     }
 
 
     public void stopScan() {
-        this.service.stopScan();
+        getService().stopScan();
     }
 
 
     public boolean isScanning() {
-        return this.service.isScanning();
+        return getService().isScanning();
     }
 
 
     public Collection<BluetoothDevice> getAvailableTaps() {
-        return this.service.getAvailableTaps();
+        return getService().getAvailableTaps();
     }
 
 
     public String getTapName(String address) {
-        return this.service.getTapName(address);
+        return getService().getTapName(address);
     }
 
 
     public void connectToTap(String address, String password) {
-        this.service.connectToTap(address, password);
+        getService().connectToTap(address, password);
     }
 
 
     public void disconnectFromCurrentTap() {
-        this.service.disconnectFromCurrentTap();
+        getService().disconnectFromCurrentTap();
     }
 
 
     public void forgetCurrentTap() {
-        this.service.forgetCurrentTap();
+        getService().forgetCurrentTap();
     }
 
 
     public void readRECLN() {
-        this.service.readRECLN();
+        getService().readRECLN();
     }
 
     public void readBTLOC() {
-        this.service.readBTLOC();
+        getService().readBTLOC();
     }
 
     public void readPAUSELEVEL() {
-        this.service.readPAUSELEVEL();
+        getService().readPAUSELEVEL();
     }
 
     public void readPAUSELEN() {
-        this.service.readPAUSELEN();
+        getService().readPAUSELEN();
     }
 
     public void readACCELERSENS() {
-        this.service.readACCELERSENS();
+        getService().readACCELERSENS();
     }
 
     public void readMIC() {
-        this.service.readMIC();
+        getService().readMIC();
     }
 
     public void readVERSION() {
-        this.service.readVERSION();
+        getService().readVERSION();
     }
 
     public void readUUID() {
-        this.service.readUUID();
+        getService().readUUID();
     }
 
     public void readBatteryLevel() {
-        this.service.readBatteryLevel();
+        getService().readBatteryLevel();
     }
 
 
     public void addCharacteristicValueListener(CharacteristicValueListener listener) {
-        this.service.addCharacteristicValueListener(listener);
+        getService().addCharacteristicValueListener(listener);
     }
 
 
     public void removeCharacteristicValueListener(CharacteristicValueListener listener){
-        this.service.removeCharacteristicValueListener(listener);
+        getService().removeCharacteristicValueListener(listener);
     }
 
 
     public void addTraceListener(TraceListener listener) {
-        this.service.addTraceListener(listener);
+        getService().addTraceListener(listener);
     }
 
 
     public void removeTraceListener(TraceListener listener){
-        this.service.removeTraceListener(listener);
+        getService().removeTraceListener(listener);
     }
 
 

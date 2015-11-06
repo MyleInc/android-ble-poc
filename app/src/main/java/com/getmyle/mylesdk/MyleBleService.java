@@ -17,7 +17,9 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -545,22 +547,40 @@ public class MyleBleService extends Service {
         this.characteristicValueListeners.remove(listener);
     }
 
-    private void notifyCharacteristicOnIntValue(String param, int value) {
-        for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
-            listener.onIntValue(param, value);
-        }
+    private void notifyCharacteristicOnIntValue(final String param, final int value) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (TapManager.CharacteristicValueListener listener: characteristicValueListeners) {
+                    listener.onIntValue(param, value);
+                }
+            }
+        });
     }
 
-    private void notifyCharacteristicOnStringValue(String param, String value) {
-        for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
-            listener.onStringValue(param, value);
-        }
+    private void notifyCharacteristicOnStringValue(final String param, final String value) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (TapManager.CharacteristicValueListener listener: characteristicValueListeners) {
+                    listener.onStringValue(param, value);
+                }
+            }
+        });
     }
 
-    private void notifyCharacteristicOnBatteryLevel(int value) {
-        for (TapManager.CharacteristicValueListener listener: this.characteristicValueListeners) {
-            listener.onBatteryLevel(value);
-        }
+    private void notifyCharacteristicOnBatteryLevel(final int value) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (TapManager.CharacteristicValueListener listener : characteristicValueListeners) {
+                    listener.onBatteryLevel(value);
+                }
+            }
+        });
     }
 
 
@@ -572,10 +592,16 @@ public class MyleBleService extends Service {
         this.traceListeners.remove(listener);
     }
 
-    private void notifyOnTrace(String msg) {
-        for (TapManager.TraceListener listener: this.traceListeners) {
-            listener.onTrace(msg);
-        }
+    private void notifyOnTrace(final String msg) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (TapManager.TraceListener listener : traceListeners) {
+                    listener.onTrace(msg);
+                }
+            }
+        });
     }
 
 }

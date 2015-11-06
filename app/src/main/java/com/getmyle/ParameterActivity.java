@@ -33,49 +33,31 @@ public class ParameterActivity extends Activity {
     private TapManager.CharacteristicValueListener listener = new TapManager.CharacteristicValueListener() {
         @Override
         public void onIntValue(final String param, final int value) {
-            Handler mainHandler = new Handler(Looper.getMainLooper());
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (param.equals(Constant.DEVICE_PARAM_RECLN)) {
-                        mEdRECLN.setText("" + value);
-                    } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEVEL)) {
-                        mEdPAUSELEVEL.setText("" + value);
-                    } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEN)) {
-                        mEdPAUSELEN.setText("" + value);
-                    } else if (param.equals(Constant.DEVICE_PARAM_ACCELERSENS)) {
-                        mEdACCELERSENS.setText("" + value);
-                    } else if (param.equals(Constant.DEVICE_PARAM_BTLOC)) {
-                        mEdBTLOC.setText("" + value);
-                    }  else if (param.equals(Constant.DEVICE_PARAM_MIC)) {
-                        mEdMIC.setText("" + value);
-                    }
-                }
-            });
+            if (param.equals(Constant.DEVICE_PARAM_RECLN)) {
+                mEdRECLN.setText("" + value);
+            } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEVEL)) {
+                mEdPAUSELEVEL.setText("" + value);
+            } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEN)) {
+                mEdPAUSELEN.setText("" + value);
+            } else if (param.equals(Constant.DEVICE_PARAM_ACCELERSENS)) {
+                mEdACCELERSENS.setText("" + value);
+            } else if (param.equals(Constant.DEVICE_PARAM_BTLOC)) {
+                mEdBTLOC.setText("" + value);
+            }  else if (param.equals(Constant.DEVICE_PARAM_MIC)) {
+                mEdMIC.setText("" + value);
+            }
         }
         @Override
         public void onStringValue(final String param, final String value) {
-            Handler mainHandler = new Handler(Looper.getMainLooper());
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (param.equals(Constant.DEVICE_PARAM_VERSION)) {
-                        mEdVERSION.setText(value);
-                    } else if (param.equals(Constant.DEVICE_PARAM_UUID)) {
-                        mEdUUID.setText(value);
-                    }
-                }
-            });
+            if (param.equals(Constant.DEVICE_PARAM_VERSION)) {
+                mEdVERSION.setText(value);
+            } else if (param.equals(Constant.DEVICE_PARAM_UUID)) {
+                mEdUUID.setText(value);
+            }
         }
         @Override
         public void onBatteryLevel(final int value) {
-            Handler mainHandler = new Handler(Looper.getMainLooper());
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    mEdBattery.setText("" + value);
-                }
-            });
+            mEdBattery.setText("" + value);
         }
     };
 

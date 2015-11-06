@@ -142,8 +142,7 @@ public class ScanActivity extends Activity {
     }
 
     private void updateScanMenuItem(MenuItem menuItem) {
-        TapManager tm = TapManager.getInstance();
-        if (tm.isReady() && tm.isScanning()) {
+        if (TapManager.getInstance().isScanning()) {
             menuItem.setTitle(R.string.scan_ac_stop_scan);
         } else {
             menuItem.setTitle(R.string.scan_ac_start_scan);

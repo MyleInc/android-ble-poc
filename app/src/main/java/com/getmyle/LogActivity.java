@@ -24,7 +24,18 @@ public class LogActivity extends Activity {
 
     private TextView tvLog;
     private Menu mMenu;
-    private TapManager mTapManager;
+
+    private TapManager.TraceListener traceListener = new TapManager.TraceListener() {
+        @Override
+        public void onTrace(String msg) {
+            Calendar c = Calendar.getInstance();
+            int seconds = c.get(Calendar.SECOND);
+            int minute = c.get(Calendar.MINUTE);
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+
+            tvLog.append(hour + ":" + minute + ":" + seconds + ": " + msg + "\n");
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,54 +44,41 @@ public class LogActivity extends Activity {
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
-
-
         // TextView
         tvLog = (TextView) findViewById(R.id.tv_log);
 
         // Setup actionbar
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
         getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        // Given that:
+        // 1. Current activity is the first one, so it can happen that MyleBleService is not bound yet to TapManager
+        // 2. TapManager methods are waiting until MyleBleService is bound to it.
+        // 3. MyleBleService is being bound in main thread and current method is on the same thread as well
+        // we cannot call TapManager methods synchronously here, because deadlock would happen:
+        // we would be waiting here for service to bound, but service is not going to bound
+        // because it has to happen on the same thread.
+        // Just to workaroud this specific case we better call TapManager method in another thread.
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                TapManager.getInstance().addTraceListener(traceListener);
+            }
+        }).start();
     }
 
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//
-//        mTapManager.stopScan();
-//    }
+        TapManager.getInstance().removeTraceListener(traceListener);
+    }
 
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//
-//        mTapManager.destroy();
-//    }
 
-//    @Override
-//    public void onServiceConnected() {
-//        mTapManager.setMyleServiceListener(this);
-//
-//        if (TextUtils.isEmpty(mChoosenDeviceUUID)) {
-//            mTapManager.startScan();
-//        } else {
-//            mTapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
-//        }
-//    }
-//
-//    @Override
-//    public void onServiceDisconnected() {
-//        mTapManager.removeMyleServiceListener(this);
-//    }
 
     // Clear log
     public void clickClearLog() {
-        tvLog.setText("");
+        //tvLog.setText("");
     }
 
     @Override
@@ -131,19 +129,5 @@ public class LogActivity extends Activity {
 
 
         return super.onOptionsItemSelected(item);
-    }
-
-//    @Override
-//    public void onFoundNewDevice(BluetoothDevice device, String deviceName) {
-//    }
-
-  //  @Override
-    public void log(String log) {
-        Calendar c = Calendar.getInstance();
-        int seconds = c.get(Calendar.SECOND);
-        int minute = c.get(Calendar.MINUTE);
-        int hour = c.get(Calendar.HOUR_OF_DAY);
-
-        tvLog.append(hour + ":" + minute + ":" + seconds + ": " + log + "\n");
     }
 }
