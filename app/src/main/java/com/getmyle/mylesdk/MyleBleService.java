@@ -389,7 +389,7 @@ public class MyleBleService extends Service {
                         notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_UUID, string);
                     }
                 } else {
-                    notifyOnTrace("onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + characteristic.getStringValue(0));
+                    notifyOnTrace("onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + Arrays.toString(characteristic.getValue()));
                 }
             }
 
