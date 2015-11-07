@@ -56,6 +56,10 @@ public interface Constant {
     String TAP_NOTIFICATION_TAP_DISCONNECTED = "tap-notification-tap-disconnected";
     String TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM = "tap-notification-tap-disconnected-param";
 
+    // send file is received
+    String TAP_NOTIFICATION_FILE_RECEIVED = "tap-notification-file-received";
+    String TAP_NOTIFICATION_FILE_RECEIVED_PARAM = "tap-notification-file-received-param";
+
 
     byte[] MESSAGE_CONNECTED = "CONNECTED".getBytes();
     byte[] MESSAGE_FILE_AUDIO = "55040".getBytes();
@@ -77,4 +81,7 @@ public interface Constant {
     String WRITE_BTLOC = "5502" + DEVICE_PARAM_BTLOC;
     String WRITE_MIC = "5502" + DEVICE_PARAM_MIC;
     String WRITE_PASSWORD = "5502" + DEVICE_PARAM_PASS;
+
+    String AudioFileNameFormat = "yyyy-MM-dd-HH-mm-ss'.wav'";
+    String LogFileNameFormat = "yyyy-MM-dd-HH-mm-ss'.log'";
 }

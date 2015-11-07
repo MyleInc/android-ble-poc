@@ -23,6 +23,8 @@ import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -313,7 +315,7 @@ public class MyleBleService extends Service {
             }
 
             @Override
-            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            public void onCharacteristicChanged(final BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                 byte[] value = characteristic.getValue();
 
                 if (characteristic == batteryChrt) {
@@ -342,10 +344,20 @@ public class MyleBleService extends Service {
                                 writeChrt.setValue(ack);
                                 btGatt.writeCharacteristic(writeChrt);
                             }
-
                             @Override
                             public void onComplete(Date time, byte[] buffer, int speed) {
-                                notifyOnTrace("Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
+                                notifyOnTrace("Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed + " B/s");
+
+                                SimpleDateFormat formatter = new SimpleDateFormat(Constant.AudioFileNameFormat);
+                                String fileName = formatter.format(time);
+                                String absolutePath = Utils.writeFile(MyleBleService.this, "audio", fileName, buffer);
+
+                                notifyOnTrace("The file is written to " + absolutePath);
+
+                                // notify about connected tap
+                                Intent intent = new Intent(Constant.TAP_NOTIFICATION_FILE_RECEIVED);
+                                intent.putExtra(Constant.TAP_NOTIFICATION_FILE_RECEIVED_PARAM, absolutePath);
+                                LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                             }
                         });
                     } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_LOG)) {
@@ -357,10 +369,15 @@ public class MyleBleService extends Service {
                                 writeChrt.setValue(ack);
                                 btGatt.writeCharacteristic(writeChrt);
                             }
-
                             @Override
                             public void onComplete(Date time, byte[] buffer, int speed) {
-                                notifyOnTrace("Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
+                                notifyOnTrace("Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed + " B/s");
+
+                                SimpleDateFormat formatter = new SimpleDateFormat(Constant.LogFileNameFormat);
+                                String fileName = formatter.format(time);
+                                String absolutePath = Utils.writeFile(MyleBleService.this, "logs", fileName, buffer);
+
+                                notifyOnTrace("The file is written to " + absolutePath);
                             }
                         });
                     } else if (Utils.startsWith(value, Constant.READ_RECLN)) {

@@ -1,5 +1,11 @@
 package com.getmyle.mylesdk;
 
+import android.content.Context;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -127,5 +133,29 @@ public class Utils {
         byte[] value = Arrays.copyOfRange(raw, param.length, raw.length);
         return new String(value);
     }
+
+
+    public static String writeFile(Context ctx, String dirPath, String fileName, byte[] data) {
+        // ensure dirs
+        File dir = ctx.getFileStreamPath(dirPath);
+        dir.mkdirs();
+
+        // and write file
+        File outputFile = new File(dir.getAbsolutePath(), fileName);
+
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(outputFile);
+            fos.write(data);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch(IOException e){
+            e.printStackTrace();
+        }
+
+        return outputFile.getAbsolutePath();
+    }
+
 
 }
