@@ -127,31 +127,21 @@ public class ParameterActivity extends Activity {
 
 
     public void clickWriteAll(View v) throws InterruptedException {
-        // Write RECLN
-//        mTapManager.sendWriteRECLN(mEdRECLN.getText().toString());
-//
-//        // Write PAUSE_LEVEL
-//        mTapManager.sendWritePAUSELEVEL(mEdPAUSELEVEL.getText().toString());
-//
-//        // Write PAUSE_LEN
-//        mTapManager.sendWritePAUSELEN(mEdPAUSELEN.getText().toString());
-//
-//        // Write ACCELER_SENS
-//        mTapManager.sendWriteACCELERSENS(mEdACCELERSENS.getText().toString());
-//
-//        // Write MIC
-//        mTapManager.sendWriteMIC(mEdMIC.getText().toString());
-//
-//        // Write BTLOC
-//        mTapManager.sendWriteBTLOC(mEdBTLOC.getText().toString());
-//
-//        // Write PASSWORD
-//        mTapManager.sendWritePASSWORD(mEdPASSWORD.getText().toString());
+        TapManager.getInstance().writeRECLN(Integer.parseInt(mEdRECLN.getText().toString()));
+        TapManager.getInstance().writePAUSELEVEL(Integer.parseInt(mEdPAUSELEVEL.getText().toString()));
+        TapManager.getInstance().writePAUSELEN(Integer.parseInt(mEdPAUSELEN.getText().toString()));
+        TapManager.getInstance().writeACCELERSENS(Integer.parseInt(mEdACCELERSENS.getText().toString()));
+        TapManager.getInstance().writeMIC(Integer.parseInt(mEdMIC.getText().toString()));
+        TapManager.getInstance().writeBTLOC(Integer.parseInt(mEdBTLOC.getText().toString()));
 
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .edit()
-                .putString(AppConstants.PREF_PASSWORD, mEdPASSWORD.getText().toString())
-                .apply();
+        if (!mEdPASSWORD.getText().toString().isEmpty()) {
+            TapManager.getInstance().writePASSWORD(mEdPASSWORD.getText().toString());
+
+            PreferenceManager.getDefaultSharedPreferences(this)
+                    .edit()
+                    .putString(AppConstants.PREF_PASSWORD, mEdPASSWORD.getText().toString())
+                    .apply();
+        }
 
         Toast.makeText(this, "Write complete", Toast.LENGTH_LONG).show();
     }

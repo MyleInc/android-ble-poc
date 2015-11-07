@@ -16,6 +16,7 @@ public interface Constant {
     String DEVICE_PARAM_MIC = "MIC";
     String DEVICE_PARAM_VERSION = "VERSION";
     String DEVICE_PARAM_UUID = "UUID";
+    String DEVICE_PARAM_PASS = "PASS";
 
     interface RECEIVE_MODE {
         int RECEIVE_AUDIO_FILE = 30;
@@ -59,12 +60,21 @@ public interface Constant {
     byte[] MESSAGE_CONNECTED = "CONNECTED".getBytes();
     byte[] MESSAGE_FILE_AUDIO = "55040".getBytes();
     byte[] MESSAGE_FILE_LOG = "55041".getBytes();
-    byte[] MESSAGE_RECLN = ("5503" + DEVICE_PARAM_RECLN).getBytes();
-    byte[] MESSAGE_PAUSELEVEL = ("5503" + DEVICE_PARAM_PAUSELEVEL).getBytes();
-    byte[] MESSAGE_PAUSELEN = ("5503" + DEVICE_PARAM_PAUSELEN).getBytes();
-    byte[] MESSAGE_ACCELERSENS = ("5503" + DEVICE_PARAM_ACCELERSENS).getBytes();
-    byte[] MESSAGE_BTLOC = ("5503" + DEVICE_PARAM_BTLOC).getBytes();
-    byte[] MESSAGE_MIC = ("5503" + DEVICE_PARAM_MIC).getBytes();
-    byte[] MESSAGE_VERSION = ("5503" + DEVICE_PARAM_VERSION).getBytes();
-    byte[] MESSAGE_UUID = ("5503" + DEVICE_PARAM_UUID).getBytes();
+
+    byte[] READ_RECLN = ("5503" + DEVICE_PARAM_RECLN).getBytes();
+    byte[] READ_PAUSELEVEL = ("5503" + DEVICE_PARAM_PAUSELEVEL).getBytes();
+    byte[] READ_PAUSELEN = ("5503" + DEVICE_PARAM_PAUSELEN).getBytes();
+    byte[] READ_ACCELERSENS = ("5503" + DEVICE_PARAM_ACCELERSENS).getBytes();
+    byte[] READ_BTLOC = ("5503" + DEVICE_PARAM_BTLOC).getBytes();
+    byte[] READ_MIC = ("5503" + DEVICE_PARAM_MIC).getBytes();
+    byte[] READ_VERSION = ("5503" + DEVICE_PARAM_VERSION).getBytes();
+    byte[] READ_UUID = ("5503" + DEVICE_PARAM_UUID).getBytes();
+
+    String WRITE_RECLN = "5502" + DEVICE_PARAM_RECLN;
+    String WRITE_PAUSELEVEL = "5502" + DEVICE_PARAM_PAUSELEVEL;
+    String WRITE_PAUSELEN = "5502" + DEVICE_PARAM_PAUSELEN;
+    String WRITE_ACCELERSENS = "5502" + DEVICE_PARAM_ACCELERSENS;
+    String WRITE_BTLOC = "5502" + DEVICE_PARAM_BTLOC;
+    String WRITE_MIC = "5502" + DEVICE_PARAM_MIC;
+    String WRITE_PASSWORD = "5502" + DEVICE_PARAM_PASS;
 }

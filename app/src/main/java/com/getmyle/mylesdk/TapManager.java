@@ -165,6 +165,35 @@ public class TapManager implements ServiceConnection {
     }
 
 
+    public void writeRECLN(int value) {
+        getService().writeRECLN(value);
+    }
+
+    public void writePAUSELEVEL(int value) {
+        getService().writePAUSELEVEL(value);
+    }
+
+    public void writePAUSELEN(int value) {
+        getService().writePAUSELEN(value);
+    }
+
+    public void writeACCELERSENS(int value) {
+        getService().writeACCELERSENS(value);
+    }
+
+    public void writeMIC(int value) {
+        getService().writeMIC(value);
+    }
+
+    public void writeBTLOC(int value) {
+        getService().writeBTLOC(value);
+    }
+
+    public void writePASSWORD(String value) {
+        getService().writePASSWORD(value);
+    }
+
+
     public void addCharacteristicValueListener(CharacteristicValueListener listener) {
         getService().addCharacteristicValueListener(listener);
     }

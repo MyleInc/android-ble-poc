@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -88,7 +89,6 @@ public class MyleBleService extends Service {
     private LinkedList<TapManager.TraceListener> traceListeners = new LinkedList<>();
 
     ScanCallback scanCallback;
-
 
 
     @Override
@@ -363,29 +363,29 @@ public class MyleBleService extends Service {
                                 notifyOnTrace("Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed);
                             }
                         });
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_RECLN)) {
-                        int number = Utils.extractInt(value, Constant.MESSAGE_RECLN);
+                    } else if (Utils.startsWith(value, Constant.READ_RECLN)) {
+                        int number = Utils.extractInt(value, Constant.READ_RECLN);
                         notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_RECLN, number);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEVEL)) {
-                        int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEVEL);
+                    } else if (Utils.startsWith(value, Constant.READ_PAUSELEVEL)) {
+                        int number = Utils.extractInt(value, Constant.READ_PAUSELEVEL);
                         notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_PAUSELEVEL, number);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_PAUSELEN)) {
-                        int number = Utils.extractInt(value, Constant.MESSAGE_PAUSELEN);
+                    } else if (Utils.startsWith(value, Constant.READ_PAUSELEN)) {
+                        int number = Utils.extractInt(value, Constant.READ_PAUSELEN);
                         notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_PAUSELEN, number);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_ACCELERSENS)) {
-                        int number = Utils.extractInt(value, Constant.MESSAGE_ACCELERSENS);
+                    } else if (Utils.startsWith(value, Constant.READ_ACCELERSENS)) {
+                        int number = Utils.extractInt(value, Constant.READ_ACCELERSENS);
                         notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_ACCELERSENS, number);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_BTLOC)) {
-                        int number = Utils.extractInt(value, Constant.MESSAGE_BTLOC);
+                    } else if (Utils.startsWith(value, Constant.READ_BTLOC)) {
+                        int number = Utils.extractInt(value, Constant.READ_BTLOC);
                         notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_BTLOC, number);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_MIC)) {
-                        int number = Utils.extractInt(value, Constant.MESSAGE_MIC);
+                    } else if (Utils.startsWith(value, Constant.READ_MIC)) {
+                        int number = Utils.extractInt(value, Constant.READ_MIC);
                         notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_MIC, number);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_VERSION)) {
-                        String string = Utils.extractString(value, Constant.MESSAGE_VERSION);
+                    } else if (Utils.startsWith(value, Constant.READ_VERSION)) {
+                        String string = Utils.extractString(value, Constant.READ_VERSION);
                         notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_VERSION, string);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_UUID)) {
-                        String string = Utils.extractString(value, Constant.MESSAGE_UUID);
+                    } else if (Utils.startsWith(value, Constant.READ_UUID)) {
+                        String string = Utils.extractString(value, Constant.READ_UUID);
                         notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_UUID, string);
                     }
                 } else {
@@ -494,6 +494,7 @@ public class MyleBleService extends Service {
 
     /**
      * Enables notification for a characteristic.
+     *
      * @param chrt
      * @param enable
      */
@@ -509,38 +510,36 @@ public class MyleBleService extends Service {
     }
 
 
-
-
     public void readRECLN() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_RECLN);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_RECLN);
     }
 
     public void readBTLOC() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_BTLOC);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_BTLOC);
     }
 
     public void readPAUSELEVEL() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_PAUSELEVEL);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_PAUSELEVEL);
     }
 
     public void readPAUSELEN() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_PAUSELEN);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_PAUSELEN);
     }
 
     public void readACCELERSENS() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_ACCELERSENS);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_ACCELERSENS);
     }
 
     public void readMIC() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_MIC);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_MIC);
     }
 
     public void readVERSION() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_VERSION);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_VERSION);
     }
 
     public void readUUID() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.MESSAGE_UUID);
+        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_UUID);
     }
 
     public void readBatteryLevel() {
@@ -548,12 +547,64 @@ public class MyleBleService extends Service {
     }
 
 
+    public void writeRECLN(int value) {
+        String temp = String.format(Locale.getDefault(), "%02d", value);
+        String str = Constant.WRITE_RECLN + temp;
+
+        this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
+    }
+
+    public void writePAUSELEVEL(int value) {
+        String temp = String.format(Locale.getDefault(), "%03d", value);
+        String str = Constant.WRITE_PAUSELEVEL + temp;
+
+        this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
+    }
+
+    public void writePAUSELEN(int value) {
+        String temp = String.format(Locale.getDefault(), "%02d", value);
+        String str = Constant.WRITE_PAUSELEN + temp;
+
+        this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
+    }
+
+    public void writeACCELERSENS(int value) {
+        String temp = String.format(Locale.getDefault(), "%03d", value);
+        String str = Constant.WRITE_ACCELERSENS + temp;
+
+        this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
+    }
+
+    public void writeMIC(int value) {
+        String temp = String.format(Locale.getDefault(), "%03d", value);
+        String str = Constant.WRITE_MIC + temp;
+
+        this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
+    }
+
+    public void writeBTLOC(int value) {
+        String str = Constant.WRITE_BTLOC + value;
+
+        this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
+    }
+
+    public void writePASSWORD(String value) {
+        byte[] a = (Constant.WRITE_PASSWORD +  String.format(Locale.getDefault(), "%c", (byte) value.length())).getBytes();
+        byte[] b = value.getBytes();
+
+        byte[] c = new byte[a.length + b.length];
+        System.arraycopy(a, 0, c, 0, a.length);
+        System.arraycopy(b, 0, c, a.length, b.length);
+
+        this.chrtProcessingQueue.put(this.writeChrt, c);
+    }
+
 
     public void addCharacteristicValueListener(TapManager.CharacteristicValueListener listener) {
         this.characteristicValueListeners.add(listener);
     }
 
-    public void removeCharacteristicValueListener(TapManager.CharacteristicValueListener listener){
+    public void removeCharacteristicValueListener(TapManager.CharacteristicValueListener listener) {
         this.characteristicValueListeners.remove(listener);
     }
 
@@ -562,7 +613,7 @@ public class MyleBleService extends Service {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                for (TapManager.CharacteristicValueListener listener: characteristicValueListeners) {
+                for (TapManager.CharacteristicValueListener listener : characteristicValueListeners) {
                     listener.onIntValue(param, value);
                 }
             }
@@ -574,7 +625,7 @@ public class MyleBleService extends Service {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                for (TapManager.CharacteristicValueListener listener: characteristicValueListeners) {
+                for (TapManager.CharacteristicValueListener listener : characteristicValueListeners) {
                     listener.onStringValue(param, value);
                 }
             }
@@ -598,7 +649,7 @@ public class MyleBleService extends Service {
         this.traceListeners.add(listener);
     }
 
-    public void removeTraceListener(TapManager.TraceListener listener){
+    public void removeTraceListener(TapManager.TraceListener listener) {
         this.traceListeners.remove(listener);
     }
 
