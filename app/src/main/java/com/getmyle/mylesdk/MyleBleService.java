@@ -57,8 +57,6 @@ public class MyleBleService extends Service {
     private HashMap<String, BluetoothDevice> availableTaps = new HashMap<>(10);
     private HashMap<String, String> availableTapNames = new HashMap<>(10);
 
-    private boolean isScanning = false;
-
     private BluetoothGattCharacteristic writeChrt;
     private BluetoothGattCharacteristic readChrt;
     private BluetoothGattCharacteristic batteryChrt;
@@ -214,6 +212,8 @@ public class MyleBleService extends Service {
         return this.scanCallback != null;
     }
 
+    public boolean isConnected() { return this.btGatt != null; }
+
 
     public Collection<BluetoothDevice> getAvailableTaps() {
         return this.availableTaps.values();
@@ -238,6 +238,10 @@ public class MyleBleService extends Service {
         this.currentTapAddress = address;
         this.currentTapPassword = password;
 
+        if (isConnected()) {
+            disconnectFromCurrentTap();
+        }
+
         // NOTE: we want autoConnect parameter of connectGatt() to be true
         // because for some reason during recording tap is getting disconnected with status 19
         // so we would like it to be auto-connected once recording is done
@@ -259,14 +263,13 @@ public class MyleBleService extends Service {
 
                         isAuthenticating = false;
 
-                        forgetCurrentTap();
-                        gatt.disconnect();
+                        disconnectFromCurrentTap();
 
                         Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED);
                         intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     } else {
-                        notifyOnTrace("Disconnected from to tap " + gatt.getDevice().getAddress() + " because of reason " + status);
+                        notifyOnTrace("Disconnected from tap " + gatt.getDevice().getAddress() + " because of reason " + status);
 
                         Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
                         intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
@@ -498,6 +501,8 @@ public class MyleBleService extends Service {
     public void disconnectFromCurrentTap() {
         this.forgetCurrentTap();
         this.btGatt.disconnect();
+        this.btGatt.close();
+        this.btGatt = null;
     }
 
 
