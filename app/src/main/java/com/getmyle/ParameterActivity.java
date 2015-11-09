@@ -127,6 +127,18 @@ public class ParameterActivity extends Activity implements
         Toast.makeText(this, "Read complete", Toast.LENGTH_LONG).show();
     }
 
+    public void clickReadBatteryLevel(View v) throws InterruptedException {
+
+        // Read Battery level
+        mTapManager.sendReadBATTERY_LEVEL();
+    }
+
+    public void clickEnableBatNotification(View v) throws InterruptedException {
+
+        // Read Battery level
+        mTapManager.sendEnableBatteryNotification();
+    }
+
     public void clickWriteAll(View v) throws InterruptedException {
         // Write RECLN
         mTapManager.sendWriteRECLN(mEdRECLN.getText().toString());

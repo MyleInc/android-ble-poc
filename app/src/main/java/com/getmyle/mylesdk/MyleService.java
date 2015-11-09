@@ -42,9 +42,13 @@ public class MyleService extends Service {
 
     private static int FOREGROUND_ID = 1338;
     private static final int AUDIO_HEADER_SIZE = 12;
+    private static final int CREDITBLE = 282;//423;
+    private static int numBytesTransfered = 0;
+    private static int fileLength = 0;
     private String mPassword;
     private BluetoothGattCharacteristic mWriteCharacter;
     private BluetoothGattCharacteristic mRecvCharacter;
+    private BluetoothGattCharacteristic mBatteryLevel;
     private BleWrapper mBleWrapper;
     private List<MyleServiceListener> mListener = new ArrayList<MyleServiceListener>();
     private List<ParameterListener> mParameterListener = new ArrayList<ParameterListener>();
@@ -200,6 +204,14 @@ public class MyleService extends Service {
         Log.i(TAG, "initBlewrapper");
         mBleWrapper = new BleWrapper(getApplicationContext());
         mBleWrapper.setBLEWrapperListener(bleWrapperListener);
+    }
+
+    public void requestBatteryLevelValue(){
+        mBleWrapper.requestCharacteristicValue(mBatteryLevel);
+    }
+
+    public void enableBatteryLevelNotification(){
+        mBleWrapper.setNotificationForCharacteristic(mBatteryLevel, true);
     }
 
     /**
@@ -412,6 +424,8 @@ public class MyleService extends Service {
     }
 
     private void receiveAudioFile(byte[] data) {
+        int numBytes = CREDITBLE;
+
         if (audioRecvLength == 0) {
             readAudioHeader(data);
 
@@ -422,6 +436,12 @@ public class MyleService extends Service {
 
             isReceivingAudioFile = true;
             notifyListeners("Receiving audio data...");
+
+            numBytes = CREDITBLE;
+            numBytesTransfered = 0;
+            byte[] ack = new byte[]{(byte) (numBytes & 0xff), (byte)(numBytes >> 8)};
+            send(ack);
+
         } else if (recvCountAudio < audioRecvLength) {
             // Get audio data
             System.arraycopy(data, 0, audioBuffer, recvCountAudio, data.length);
@@ -429,7 +449,7 @@ public class MyleService extends Service {
             Log.i(TAG, "recvCountAudio = " + recvCountAudio);
 
 			/* End of audio file */
-            if (recvCountAudio == audioRecvLength) {
+            if (recvCountAudio >= audioRecvLength) {
                 Log.i(TAG, "Receive audio done");
                 // Save audio file to sdcard
                 save2SD(audioBuffer, year + "-" + month + "-" + date + "_" + hour + ":" + min + ":" + second + ".wav");
@@ -440,22 +460,39 @@ public class MyleService extends Service {
 
                 notifyListeners("Elapse " + timeTransfer / 1000 + " seconds");
                 // mListener.log("Speed  = " + (recvCountAudio/timeTransfer) + " B/s");
+                notifyListeners("Transfer Speed " + (int)(audioRecvLength/(timeTransfer/1000)) + " B/s");
                 notifyListeners("Receive done");
 
                 // Clear variable, flags
                 audioRecvLength = 0;
                 recvCountAudio = 0;
+                fileLength = 0;
                 isReceivingAudioFile = false;
                 mReceiveMode = Constant.RECEIVE_MODE.RECEIVE_NONE;
             }
-        }
+            else {
+                numBytesTransfered += data.length;
+                fileLength += numBytesTransfered;
 
-        // Send ack is number bytes received.
-        byte[] ack = new byte[]{(byte) ((data.length) & 0xff)};
-        send(ack);
+                numBytes = CREDITBLE;
+                if(audioRecvLength - recvCountAudio < CREDITBLE)
+                {
+                    numBytes = audioRecvLength - recvCountAudio;
+                }
+
+                if(numBytesTransfered >= numBytes){
+                    numBytesTransfered = 0;
+                    // Send ack is number bytes received.
+                    byte[] ack = new byte[]{(byte) (numBytes & 0xff),  (byte)(numBytes >> 8)};
+                    send(ack);
+                }
+            }
+        }
     }
 
     private void receiveLogFile(byte[] data) {
+        int numBytes = CREDITBLE;
+
         if (logRecvLength == 0) {
             readLogHeader(data);
 
@@ -464,6 +501,12 @@ public class MyleService extends Service {
 
             isReceivingLogFile = true;
             notifyListeners("Receiving log data...");
+
+            numBytesTransfered = 0;
+            numBytes = CREDITBLE;
+            byte[] ack = new byte[]{(byte) (numBytes & 0xff),  (byte)(numBytes >> 8)};
+            send(ack);
+
         } else if (recvCountLog < logRecvLength) {
             // Get audio data
             System.arraycopy(data, 0, logBuffer, recvCountLog, data.length);
@@ -471,7 +514,7 @@ public class MyleService extends Service {
             Log.i(TAG, "recvCountLog = " + recvCountLog);
 
 			/* End of log file */
-            if (recvCountLog == logRecvLength) {
+            if (recvCountLog >= logRecvLength) {
                 Log.i(TAG, "Receive log done");
 
                 // Save log file to sdcard
@@ -482,7 +525,7 @@ public class MyleService extends Service {
                 long timeTransfer = (stopRecvTime - startRecvTime);// to second
 
                 notifyListeners("Elapse " + timeTransfer / 1000 + " seconds");
-                // mListener.log("Speed  = " + (recvCountAudio/timeTransfer) + " B/s");
+                notifyListeners("Speed  = " + (recvCountLog / (timeTransfer / 1000)) + " B/s");
                 notifyListeners("Receive log done");
 
                 // Clear variable, flags
@@ -491,11 +534,24 @@ public class MyleService extends Service {
                 isReceivingLogFile = false;
                 mReceiveMode = Constant.RECEIVE_MODE.RECEIVE_NONE;
             }
-        }
+            else {
+                numBytesTransfered += data.length;
+                fileLength += numBytesTransfered;
 
-        // Send ack is number bytes received.
-        byte[] ack = new byte[]{(byte) ((data.length) & 0xff)};
-        send(ack);
+                numBytes = CREDITBLE;
+                if(logRecvLength - recvCountLog < CREDITBLE)
+                {
+                    numBytes = logRecvLength - recvCountLog;
+                }
+
+                if(numBytesTransfered >= numBytes){
+                    numBytesTransfered = 0;
+                    // Send ack is number bytes received.
+                    byte[] ack = new byte[]{(byte) (numBytes & 0xff),  (byte)(numBytes >> 8)};
+                    send(ack);
+                }
+            }
+        }
     }
 
     /**
@@ -630,6 +686,27 @@ public class MyleService extends Service {
         }
 
         @Override
+        public void setNotificationForCharacteristicBattery(BluetoothGattCharacteristic ch, boolean enabled) {
+            if (ch != null) {
+                mBleWrapper.setNotificationForCharacteristic(ch, true);
+            }
+        }
+
+        @Override
+        public void onReceiveBatteryLevel(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic charac, byte[] data) {
+
+            notifyListeners("onReceiveBatteryLevel = " + data[0]);
+        }
+
+        @Override
+        public void onReadBatteryLevel(BluetoothGatt gatt,
+                                       BluetoothGattCharacteristic charac, byte[] data) {
+
+            notifyListeners("onReadBatteryLevel = " + data[0]);
+        }
+
+        @Override
         public void onListCharacteristics(List<BluetoothGattCharacteristic> chars) {
             for (BluetoothGattCharacteristic charac : chars) {
                 Log.i(TAG, "characterestic = " + charac.getUuid());
@@ -639,9 +716,11 @@ public class MyleService extends Service {
                 } else if (charac.getUuid().toString().equalsIgnoreCase(Constant.CHARACTERISTIC_UUID_TO_READ)) {
                     mRecvCharacter = charac;
                     mBleWrapper.setNotificationForCharacteristic(mRecvCharacter, true);
+                }else if(charac.getUuid().toString().equalsIgnoreCase(Constant.BATTERY_LEVEL_UUID)){
+                    mBatteryLevel = charac;
+                   // mBleWrapper.setNotificationForCharacteristic(mBatteryLevel, true);
                 }
             }
-
             notifyListeners("list charecterestic done");
         }
 
@@ -650,11 +729,12 @@ public class MyleService extends Service {
             for (BluetoothGattService service : services) {
                 Log.i(TAG, "Service found = " + service.getUuid());
                 if (service.getUuid().toString().equalsIgnoreCase(Constant.SERVICE_UUID)) {
-                    notifyListeners("list service done");
                     mBleWrapper.getCharacteristicsForService(service);
-                    break;
+                }else if (service.getUuid().toString().equalsIgnoreCase(Constant.BATTERY_SERVICE_UUID)) {
+                    mBleWrapper.getCharacteristicsForService(service);
                 }
             }
+            notifyListeners("list service done");
         }
 
         @Override

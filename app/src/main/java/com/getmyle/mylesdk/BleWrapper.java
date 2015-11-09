@@ -42,6 +42,7 @@ public class BleWrapper {
     private BluetoothGatt mBluetoothGatt;
     private List<BluetoothGattService> mBluetoothGattServices = new ArrayList<BluetoothGattService>();
     private Queue<byte[]> mWriteCharacQueue = new LinkedList<byte[]>();
+    private boolean subscribeToBatLevel = false;
 
     public BleWrapper(Context context) {
         this.mContext = context;
@@ -169,6 +170,7 @@ public class BleWrapper {
         mIsConnected = false;
         mBluetoothGatt.disconnect();
         mBluetoothGatt.close();
+        subscribeToBatLevel = false;
     }
 
     /**
@@ -179,6 +181,7 @@ public class BleWrapper {
 
         mBluetoothGatt.close();
         mBluetoothGatt = null;
+        subscribeToBatLevel = false;
     }
 
     /**
@@ -326,14 +329,33 @@ public class BleWrapper {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             Log.i(TAG, "Read done");
+            if (characteristic.getUuid().toString().equals(Constant.BATTERY_LEVEL_UUID)) {
+                Log.i(TAG, "onCharacteristicRead, Battery level");
+                mBLEWrapperListener.onReadBatteryLevel(gatt,
+                        characteristic,
+                        characteristic.getValue());
+            }
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             if (characteristic.getUuid().toString().equals(Constant.CHARACTERISTIC_UUID_TO_READ)) {
+
                 Log.i(TAG, "onCharacteristicChanged");
                 mBLEWrapperListener.onReceiveData(gatt,
+                        characteristic,
+                        characteristic.getValue());
+/*
+                if(subscribeToBatLevel == false){
+                    subscribeToBatLevel = true;
+                    mBLEWrapperListener.setNotificationForCharacteristicBattery(gatt.getService(UUID.fromString(Constant.BATTERY_SERVICE_UUID)).getCharacteristic(UUID.fromString(Constant.BATTERY_LEVEL_UUID)), subscribeToBatLevel);
+                }
+ */
+            }else
+            if (characteristic.getUuid().toString().equals(Constant.BATTERY_LEVEL_UUID)) {
+                Log.i(TAG, "onCharacteristicChanged, Battery level");
+                mBLEWrapperListener.onReceiveBatteryLevel(gatt,
                         characteristic,
                         characteristic.getValue());
             }
@@ -351,13 +373,9 @@ public class BleWrapper {
             }
         }
 
-        ;
-
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
         }
-
-        ;
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
@@ -366,8 +384,6 @@ public class BleWrapper {
 
             mBLEWrapperListener.onDidConfigureGatt();
         }
-
-        ;
     };
 
     interface BLEWrapperListener {
@@ -382,6 +398,11 @@ public class BleWrapper {
         public void onListCharacteristics(List<BluetoothGattCharacteristic> chars);
 
         public void onReceiveData(BluetoothGatt gatt, BluetoothGattCharacteristic charac, byte[] data);
+
+        public void setNotificationForCharacteristicBattery(BluetoothGattCharacteristic charac, boolean enabled);
+
+        public void onReceiveBatteryLevel(BluetoothGatt gatt, BluetoothGattCharacteristic charac, byte[] data);
+        public void onReadBatteryLevel(BluetoothGatt gatt, BluetoothGattCharacteristic charac, byte[] data);
 
         public void onDidConfigureGatt(); /* Config charecterestic to nofity charac change */
     }
