@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 
 /**
@@ -13,11 +14,9 @@ import java.util.concurrent.SynchronousQueue;
  */
 public class ChrtProcessingQueue {
 
-    ArrayBlockingQueue<QueueItem> toProcess = new ArrayBlockingQueue<>(10000);
-    ArrayBlockingQueue<QueueItem> processingQueue = new ArrayBlockingQueue<>(1);
+    ArrayBlockingQueue<QueueItem> toProcess = new ArrayBlockingQueue<>(1000);
+    Semaphore nextItemLock = new Semaphore(0);
     BluetoothGatt gatt;
-
-    QueueItem currentItem;
 
     public ChrtProcessingQueue(BluetoothGatt gatt) {
         this.gatt = gatt;
@@ -27,41 +26,60 @@ public class ChrtProcessingQueue {
             public void run() {
                 while (true) {
                     try {
-                        currentItem = toProcess.take();
-                        process(currentItem);
-                        processingQueue.take();
+                        // wait until there is anything in toProcess queue and process when available
+                        process(toProcess.take());
+
+                        // wait until the item is processed
+                        nextItemLock.acquire();
                     } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             }
         }).start();
     }
 
+
+    /**
+     * Queues write characteristic action.
+     * @param chrt
+     * @param writeData
+     */
     public void put(BluetoothGattCharacteristic chrt, byte[] writeData) {
         try {
             this.toProcess.put(new QueueItem(chrt, writeData));
         } catch (InterruptedException e) {
-        }
-    }
-
-    public void put(BluetoothGattCharacteristic chrt) {
-        try {
-            this.toProcess.put(new QueueItem(chrt));
-        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
 
     /**
-     * Removes head from queue and processes next request.
+     * Queues read characteristic action.
+     * @param chrt
      */
-    public void processNext() {
+    public void put(BluetoothGattCharacteristic chrt) {
         try {
-            processingQueue.put(currentItem);
+            this.toProcess.put(new QueueItem(chrt));
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
+
+    /**
+     * Is called to indicate that current item is processed, so next one can be handled.
+     */
+    public void processNext() {
+        // release next item lock
+        nextItemLock.release();
+    }
+
+
+    /**
+     * Pprocesses given action.
+     * @param item
+     */
     private void process(QueueItem item) {
         if (item.isReading()) {
             this.gatt.readCharacteristic(item.chrt);
