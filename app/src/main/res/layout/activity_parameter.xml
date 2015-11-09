@@ -193,15 +193,7 @@
 	        android:text="@string/write_all"
 	        android:onClick="clickWriteAll"/>
 
-		<Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Enable batterry notification"
-            android:id="@+id/button"
-            android:onClick="clickEnableBatNotification"
-            />
-
-	</LinearLayout>
+		</LinearLayout>
 
 		<LinearLayout
 			android:orientation="horizontal"
