@@ -93,7 +93,7 @@ public class FileReceiver {
             if (numBytesReceived >= fileLength) {
                 long transferTime = System.nanoTime() - this.startTime;
 
-                complete((int)(fileLength / (transferTime / 1000000000.0)));
+                complete((int) (fileLength / (transferTime / 1000000000.0)));
             } else {
                 numBytesReceivedWithinPackage += data.length;
 
@@ -108,10 +108,11 @@ public class FileReceiver {
             }
         }
     }
-    
+
 
     /**
      * Extracts file size from metadata received
+     *
      * @param data
      * @return
      */
@@ -124,6 +125,7 @@ public class FileReceiver {
 
     /**
      * Extracts file time from metadata received
+     *
      * @param data
      * @return
      */
@@ -160,6 +162,7 @@ public class FileReceiver {
 
     /**
      * Notifies caller that acknowledge has to be made about received data.
+     *
      * @param numBytes
      */
     private void acknowledge(int numBytes) {
@@ -170,6 +173,7 @@ public class FileReceiver {
 
     /**
      * Notifies caller about completion of file receiving.
+     *
      * @param speed
      */
     private void complete(int speed) {

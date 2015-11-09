@@ -9,7 +9,6 @@ import com.getmyle.mylesdk.TapManager;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Observable;
-import java.util.Observer;
 
 
 public class MyleApplication extends Application {

@@ -31,10 +31,14 @@ public class TapManager implements ServiceConnection {
 
 
     public static void setup(final Application app, final String address, final String password) throws Exception {
-        if (instance != null) { throw new Exception("TapManager is already instanciated"); }
+        if (instance != null) {
+            throw new Exception("TapManager is already instanciated");
+        }
 
         synchronized (TapManager.class) {
-            if (instance != null) { throw new Exception("TapManager is already instanciated"); }
+            if (instance != null) {
+                throw new Exception("TapManager is already instanciated");
+            }
 
             instance = new TapManager(app);
         }
@@ -57,7 +61,6 @@ public class TapManager implements ServiceConnection {
     }
 
 
-
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
         MyleBleService.LocalBinder localBinder = (MyleBleService.LocalBinder) binder;
@@ -73,6 +76,7 @@ public class TapManager implements ServiceConnection {
 
     /**
      * NOTE: we wait for service to be available on current thread.
+     *
      * @return
      */
     private MyleBleService getService() {
@@ -81,7 +85,7 @@ public class TapManager implements ServiceConnection {
         }
         try {
             this.latch.await();
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return this.service;
@@ -184,7 +188,7 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public void removeCharacteristicValueListener(CharacteristicValueListener listener){
+    public void removeCharacteristicValueListener(CharacteristicValueListener listener) {
         getService().removeCharacteristicValueListener(listener);
     }
 
@@ -194,20 +198,26 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public void removeTraceListener(TraceListener listener){
+    public void removeTraceListener(TraceListener listener) {
         getService().removeTraceListener(listener);
     }
 
 
     public static abstract class CharacteristicValueListener {
-        public void onIntValue(String param, int value) {}
-        public void onStringValue(String param, String value) {}
-        public void onBatteryLevel(int value) {}
+        public void onIntValue(String param, int value) {
+        }
+
+        public void onStringValue(String param, String value) {
+        }
+
+        public void onBatteryLevel(int value) {
+        }
     }
 
 
     public static abstract class TraceListener {
-        public void onTrace(String msg) {}
+        public void onTrace(String msg) {
+        }
     }
 
 }

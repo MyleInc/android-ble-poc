@@ -1,7 +1,6 @@
 package com.getmyle;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,15 +9,13 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.getmyle.mylesdk.Constant;
+import com.getmyle.mylesdk.Constants;
 import com.getmyle.mylesdk.TapManager;
 
 import java.util.ArrayList;
@@ -87,7 +84,7 @@ public class ScanActivity extends Activity {
 
         refreshList();
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constant.TAP_NOTIFICATION_SCAN));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constants.TAP_NOTIFICATION_SCAN));
     }
 
 

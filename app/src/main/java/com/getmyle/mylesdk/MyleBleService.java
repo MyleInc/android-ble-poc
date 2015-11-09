@@ -146,7 +146,9 @@ public class MyleBleService extends Service {
 
 
     public void startScan() {
-        if (this.isScanning()) { return; }
+        if (this.isScanning()) {
+            return;
+        }
 
         this.availableTaps.clear();
         this.availableTapNames.clear();
@@ -165,7 +167,7 @@ public class MyleBleService extends Service {
                 // so we use trick from http://stackoverflow.com/a/24539704/444630
                 // to extract service UUID
                 List<UUID> uuids = Utils.parseUuidsByAdvertisedData(result.getScanRecord().getBytes());
-                if (!uuids.contains(Constant.SERVICE_UUID)) {
+                if (!uuids.contains(Constants.SERVICE_UUID)) {
                     return;
                 }
 
@@ -180,7 +182,7 @@ public class MyleBleService extends Service {
                 availableTaps.put(address, result.getDevice());
                 availableTapNames.put(address, name);
 
-                Intent intent = new Intent(Constant.TAP_NOTIFICATION_SCAN);
+                Intent intent = new Intent(Constants.TAP_NOTIFICATION_SCAN);
                 LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
 
                 // auto-connect to this tap is it's last remembered
@@ -201,7 +203,9 @@ public class MyleBleService extends Service {
 
 
     public void stopScan() {
-        if (!this.isScanning()) { return; }
+        if (!this.isScanning()) {
+            return;
+        }
 
         BluetoothLeScanner scanner = this.btAdapter.getBluetoothLeScanner();
         scanner.stopScan(this.scanCallback);
@@ -221,7 +225,9 @@ public class MyleBleService extends Service {
         return (this.btGatt != null) ? this.btGatt.getDevice() : null;
     }
 
-    public boolean isConnected() { return this.btGatt != null; }
+    public boolean isConnected() {
+        return this.btGatt != null;
+    }
 
 
     public Collection<BluetoothDevice> getAvailableTaps() {
@@ -276,14 +282,14 @@ public class MyleBleService extends Service {
 
                         disconnectFromCurrentTap();
 
-                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED);
-                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTH_FAILED_PARAM, gatt.getDevice().getAddress());
+                        Intent intent = new Intent(Constants.TAP_NOTIFICATION_TAP_AUTH_FAILED);
+                        intent.putExtra(Constants.TAP_NOTIFICATION_TAP_AUTH_FAILED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     } else {
                         notifyOnTrace("Disconnected from tap " + gatt.getDevice().getAddress() + " because of reason " + status);
 
-                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED);
-                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
+                        Intent intent = new Intent(Constants.TAP_NOTIFICATION_TAP_DISCONNECTED);
+                        intent.putExtra(Constants.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     }
 
@@ -313,20 +319,20 @@ public class MyleBleService extends Service {
 
                 // adjust our WRITE characteristic
                 writeChrt = gatt
-                        .getService(Constant.SERVICE_UUID)
-                        .getCharacteristic(Constant.CHARACTERISTIC_UUID_TO_WRITE);
+                        .getService(Constants.SERVICE_UUID)
+                        .getCharacteristic(Constants.CHARACTERISTIC_UUID_TO_WRITE);
                 writeChrt.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 
                 // read characteristic
                 readChrt = gatt
-                        .getService(Constant.SERVICE_UUID)
-                        .getCharacteristic(Constant.CHARACTERISTIC_UUID_TO_READ);
+                        .getService(Constants.SERVICE_UUID)
+                        .getCharacteristic(Constants.CHARACTERISTIC_UUID_TO_READ);
                 enableChrtNotification(readChrt, true);
 
                 // battery level characteristic
                 batteryChrt = gatt
-                        .getService(Constant.BATTERY_SERVICE_UUID)
-                        .getCharacteristic(Constant.BATTERY_LEVEL_UUID);
+                        .getService(Constants.BATTERY_SERVICE_UUID)
+                        .getCharacteristic(Constants.BATTERY_LEVEL_UUID);
                 enableChrtNotification(batteryChrt, true);
             }
 
@@ -339,7 +345,7 @@ public class MyleBleService extends Service {
                 } else if (characteristic == readChrt) {
                     if (fileReceiver.isInProgress()) {
                         fileReceiver.append(value);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_CONNECTED)) {
+                    } else if (Utils.startsWith(value, Constants.MESSAGE_CONNECTED)) {
                         // tap accepted password this is the last step when tap is considered authenticated
                         notifyOnTrace("Password is OK!");
 
@@ -348,10 +354,10 @@ public class MyleBleService extends Service {
                         sendTime();
 
                         // notify about connected tap
-                        Intent intent = new Intent(Constant.TAP_NOTIFICATION_TAP_AUTHED);
-                        intent.putExtra(Constant.TAP_NOTIFICATION_TAP_AUTHED_PARAM, gatt.getDevice().getAddress());
+                        Intent intent = new Intent(Constants.TAP_NOTIFICATION_TAP_AUTHED);
+                        intent.putExtra(Constants.TAP_NOTIFICATION_TAP_AUTHED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_AUDIO)) {
+                    } else if (Utils.startsWith(value, Constants.MESSAGE_FILE_AUDIO)) {
                         notifyOnTrace("Start receiving audio file...");
                         fileReceiver.start(new FileReceiver.Callbacks() {
                             @Override
@@ -360,23 +366,24 @@ public class MyleBleService extends Service {
                                 writeChrt.setValue(ack);
                                 btGatt.writeCharacteristic(writeChrt);
                             }
+
                             @Override
                             public void onComplete(Date time, byte[] buffer, int speed) {
                                 notifyOnTrace("Received audio file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed + " B/s");
 
-                                SimpleDateFormat formatter = new SimpleDateFormat(Constant.AudioFileNameFormat);
+                                SimpleDateFormat formatter = new SimpleDateFormat(Constants.AudioFileNameFormat);
                                 String fileName = formatter.format(time);
                                 String absolutePath = Utils.writeFile(MyleBleService.this, "audio", fileName, buffer);
 
                                 notifyOnTrace("The file is written to " + absolutePath);
 
                                 // notify about connected tap
-                                Intent intent = new Intent(Constant.TAP_NOTIFICATION_FILE_RECEIVED);
-                                intent.putExtra(Constant.TAP_NOTIFICATION_FILE_RECEIVED_PARAM, absolutePath);
+                                Intent intent = new Intent(Constants.TAP_NOTIFICATION_FILE_RECEIVED);
+                                intent.putExtra(Constants.TAP_NOTIFICATION_FILE_RECEIVED_PARAM, absolutePath);
                                 LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                             }
                         });
-                    } else if (Utils.startsWith(value, Constant.MESSAGE_FILE_LOG)) {
+                    } else if (Utils.startsWith(value, Constants.MESSAGE_FILE_LOG)) {
                         notifyOnTrace("Start receiving log file...");
                         fileReceiver.start(new FileReceiver.Callbacks() {
                             @Override
@@ -385,41 +392,42 @@ public class MyleBleService extends Service {
                                 writeChrt.setValue(ack);
                                 btGatt.writeCharacteristic(writeChrt);
                             }
+
                             @Override
                             public void onComplete(Date time, byte[] buffer, int speed) {
                                 notifyOnTrace("Received log file recorded at " + time + " with size " + buffer.length + " bytes at speed " + speed + " B/s");
 
-                                SimpleDateFormat formatter = new SimpleDateFormat(Constant.LogFileNameFormat);
+                                SimpleDateFormat formatter = new SimpleDateFormat(Constants.LogFileNameFormat);
                                 String fileName = formatter.format(time);
                                 String absolutePath = Utils.writeFile(MyleBleService.this, "logs", fileName, buffer);
 
                                 notifyOnTrace("The file is written to " + absolutePath);
                             }
                         });
-                    } else if (Utils.startsWith(value, Constant.READ_RECLN)) {
-                        int number = Utils.extractInt(value, Constant.READ_RECLN);
-                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_RECLN, number);
-                    } else if (Utils.startsWith(value, Constant.READ_PAUSELEVEL)) {
-                        int number = Utils.extractInt(value, Constant.READ_PAUSELEVEL);
-                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_PAUSELEVEL, number);
-                    } else if (Utils.startsWith(value, Constant.READ_PAUSELEN)) {
-                        int number = Utils.extractInt(value, Constant.READ_PAUSELEN);
-                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_PAUSELEN, number);
-                    } else if (Utils.startsWith(value, Constant.READ_ACCELERSENS)) {
-                        int number = Utils.extractInt(value, Constant.READ_ACCELERSENS);
-                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_ACCELERSENS, number);
-                    } else if (Utils.startsWith(value, Constant.READ_BTLOC)) {
-                        int number = Utils.extractInt(value, Constant.READ_BTLOC);
-                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_BTLOC, number);
-                    } else if (Utils.startsWith(value, Constant.READ_MIC)) {
-                        int number = Utils.extractInt(value, Constant.READ_MIC);
-                        notifyCharacteristicOnIntValue(Constant.DEVICE_PARAM_MIC, number);
-                    } else if (Utils.startsWith(value, Constant.READ_VERSION)) {
-                        String string = Utils.extractString(value, Constant.READ_VERSION);
-                        notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_VERSION, string);
-                    } else if (Utils.startsWith(value, Constant.READ_UUID)) {
-                        String string = Utils.extractString(value, Constant.READ_UUID);
-                        notifyCharacteristicOnStringValue(Constant.DEVICE_PARAM_UUID, string);
+                    } else if (Utils.startsWith(value, Constants.READ_RECLN)) {
+                        int number = Utils.extractInt(value, Constants.READ_RECLN);
+                        notifyCharacteristicOnIntValue(Constants.DEVICE_PARAM_RECLN, number);
+                    } else if (Utils.startsWith(value, Constants.READ_PAUSELEVEL)) {
+                        int number = Utils.extractInt(value, Constants.READ_PAUSELEVEL);
+                        notifyCharacteristicOnIntValue(Constants.DEVICE_PARAM_PAUSELEVEL, number);
+                    } else if (Utils.startsWith(value, Constants.READ_PAUSELEN)) {
+                        int number = Utils.extractInt(value, Constants.READ_PAUSELEN);
+                        notifyCharacteristicOnIntValue(Constants.DEVICE_PARAM_PAUSELEN, number);
+                    } else if (Utils.startsWith(value, Constants.READ_ACCELERSENS)) {
+                        int number = Utils.extractInt(value, Constants.READ_ACCELERSENS);
+                        notifyCharacteristicOnIntValue(Constants.DEVICE_PARAM_ACCELERSENS, number);
+                    } else if (Utils.startsWith(value, Constants.READ_BTLOC)) {
+                        int number = Utils.extractInt(value, Constants.READ_BTLOC);
+                        notifyCharacteristicOnIntValue(Constants.DEVICE_PARAM_BTLOC, number);
+                    } else if (Utils.startsWith(value, Constants.READ_MIC)) {
+                        int number = Utils.extractInt(value, Constants.READ_MIC);
+                        notifyCharacteristicOnIntValue(Constants.DEVICE_PARAM_MIC, number);
+                    } else if (Utils.startsWith(value, Constants.READ_VERSION)) {
+                        String string = Utils.extractString(value, Constants.READ_VERSION);
+                        notifyCharacteristicOnStringValue(Constants.DEVICE_PARAM_VERSION, string);
+                    } else if (Utils.startsWith(value, Constants.READ_UUID)) {
+                        String string = Utils.extractString(value, Constants.READ_UUID);
+                        notifyCharacteristicOnStringValue(Constants.DEVICE_PARAM_UUID, string);
                     }
                 } else {
                     notifyOnTrace("onCharacteristicChanged unhandled value of " + characteristic.getUuid() + ": " + Arrays.toString(characteristic.getValue()));
@@ -536,7 +544,7 @@ public class MyleBleService extends Service {
     private void enableChrtNotification(BluetoothGattCharacteristic chrt, boolean enable) {
         this.btGatt.setCharacteristicNotification(chrt, enable);
 
-        BluetoothGattDescriptor descriptor = readChrt.getDescriptor(UUID.fromString(Constant.NOTIFICATION_DESCRIPTOR));
+        BluetoothGattDescriptor descriptor = readChrt.getDescriptor(UUID.fromString(Constants.NOTIFICATION_DESCRIPTOR));
         if (descriptor != null) {
             byte[] val = enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
             descriptor.setValue(val);
@@ -546,35 +554,35 @@ public class MyleBleService extends Service {
 
 
     public void readRECLN() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_RECLN);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_RECLN);
     }
 
     public void readBTLOC() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_BTLOC);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_BTLOC);
     }
 
     public void readPAUSELEVEL() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_PAUSELEVEL);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_PAUSELEVEL);
     }
 
     public void readPAUSELEN() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_PAUSELEN);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_PAUSELEN);
     }
 
     public void readACCELERSENS() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_ACCELERSENS);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_ACCELERSENS);
     }
 
     public void readMIC() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_MIC);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_MIC);
     }
 
     public void readVERSION() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_VERSION);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_VERSION);
     }
 
     public void readUUID() {
-        this.chrtProcessingQueue.put(this.writeChrt, Constant.READ_UUID);
+        this.chrtProcessingQueue.put(this.writeChrt, Constants.READ_UUID);
     }
 
     public void readBatteryLevel() {
@@ -584,47 +592,47 @@ public class MyleBleService extends Service {
 
     public void writeRECLN(int value) {
         String temp = String.format(Locale.getDefault(), "%02d", value);
-        String str = Constant.WRITE_RECLN + temp;
+        String str = Constants.WRITE_RECLN + temp;
 
         this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
     }
 
     public void writePAUSELEVEL(int value) {
         String temp = String.format(Locale.getDefault(), "%03d", value);
-        String str = Constant.WRITE_PAUSELEVEL + temp;
+        String str = Constants.WRITE_PAUSELEVEL + temp;
 
         this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
     }
 
     public void writePAUSELEN(int value) {
         String temp = String.format(Locale.getDefault(), "%02d", value);
-        String str = Constant.WRITE_PAUSELEN + temp;
+        String str = Constants.WRITE_PAUSELEN + temp;
 
         this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
     }
 
     public void writeACCELERSENS(int value) {
         String temp = String.format(Locale.getDefault(), "%03d", value);
-        String str = Constant.WRITE_ACCELERSENS + temp;
+        String str = Constants.WRITE_ACCELERSENS + temp;
 
         this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
     }
 
     public void writeMIC(int value) {
         String temp = String.format(Locale.getDefault(), "%03d", value);
-        String str = Constant.WRITE_MIC + temp;
+        String str = Constants.WRITE_MIC + temp;
 
         this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
     }
 
     public void writeBTLOC(int value) {
-        String str = Constant.WRITE_BTLOC + value;
+        String str = Constants.WRITE_BTLOC + value;
 
         this.chrtProcessingQueue.put(this.writeChrt, str.getBytes());
     }
 
     public void writePASSWORD(String value) {
-        byte[] a = (Constant.WRITE_PASSWORD +  String.format(Locale.getDefault(), "%c", (byte) value.length())).getBytes();
+        byte[] a = (Constants.WRITE_PASSWORD + String.format(Locale.getDefault(), "%c", (byte) value.length())).getBytes();
         byte[] b = value.getBytes();
 
         byte[] c = new byte[a.length + b.length];

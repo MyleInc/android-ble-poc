@@ -2,8 +2,6 @@ package com.getmyle;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
@@ -11,7 +9,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.getmyle.mylesdk.Constant;
+import com.getmyle.mylesdk.Constants;
 import com.getmyle.mylesdk.TapManager;
 
 /*
@@ -33,25 +31,25 @@ public class ParameterActivity extends Activity {
     private TapManager.CharacteristicValueListener listener = new TapManager.CharacteristicValueListener() {
         @Override
         public void onIntValue(final String param, final int value) {
-            if (param.equals(Constant.DEVICE_PARAM_RECLN)) {
+            if (param.equals(Constants.DEVICE_PARAM_RECLN)) {
                 mEdRECLN.setText("" + value);
-            } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEVEL)) {
+            } else if (param.equals(Constants.DEVICE_PARAM_PAUSELEVEL)) {
                 mEdPAUSELEVEL.setText("" + value);
-            } else if (param.equals(Constant.DEVICE_PARAM_PAUSELEN)) {
+            } else if (param.equals(Constants.DEVICE_PARAM_PAUSELEN)) {
                 mEdPAUSELEN.setText("" + value);
-            } else if (param.equals(Constant.DEVICE_PARAM_ACCELERSENS)) {
+            } else if (param.equals(Constants.DEVICE_PARAM_ACCELERSENS)) {
                 mEdACCELERSENS.setText("" + value);
-            } else if (param.equals(Constant.DEVICE_PARAM_BTLOC)) {
+            } else if (param.equals(Constants.DEVICE_PARAM_BTLOC)) {
                 mEdBTLOC.setText("" + value);
-            }  else if (param.equals(Constant.DEVICE_PARAM_MIC)) {
+            }  else if (param.equals(Constants.DEVICE_PARAM_MIC)) {
                 mEdMIC.setText("" + value);
             }
         }
         @Override
         public void onStringValue(final String param, final String value) {
-            if (param.equals(Constant.DEVICE_PARAM_VERSION)) {
+            if (param.equals(Constants.DEVICE_PARAM_VERSION)) {
                 mEdVERSION.setText(value);
-            } else if (param.equals(Constant.DEVICE_PARAM_UUID)) {
+            } else if (param.equals(Constants.DEVICE_PARAM_UUID)) {
                 mEdUUID.setText(value);
             }
         }

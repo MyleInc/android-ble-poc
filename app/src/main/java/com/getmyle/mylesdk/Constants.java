@@ -2,7 +2,7 @@ package com.getmyle.mylesdk;
 
 import java.util.UUID;
 
-public interface Constant {
+public interface Constants {
     enum ConnectState {
         BLE_CONNECT_SUCCESS,
         BLE_CONNECT_FAIL
