@@ -88,21 +88,6 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public void startScan() {
-        getService().startScan();
-    }
-
-
-    public void stopScan() {
-        getService().stopScan();
-    }
-
-
-    public boolean isScanning() {
-        return getService().isScanning();
-    }
-
-
     public Collection<BluetoothDevice> getAvailableTaps() {
         return getService().getAvailableTaps();
     }
@@ -123,8 +108,8 @@ public class TapManager implements ServiceConnection {
     }
 
 
-    public void forgetCurrentTap() {
-        getService().forgetCurrentTap();
+    public BluetoothDevice getConnectedTap() {
+        return getService().getConnectedTap();
     }
 
 

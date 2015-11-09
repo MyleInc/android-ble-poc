@@ -146,6 +146,8 @@ public class MyleBleService extends Service {
 
 
     public void startScan() {
+        if (this.isScanning()) { return; }
+
         this.availableTaps.clear();
         this.availableTapNames.clear();
 
@@ -199,6 +201,8 @@ public class MyleBleService extends Service {
 
 
     public void stopScan() {
+        if (!this.isScanning()) { return; }
+
         BluetoothLeScanner scanner = this.btAdapter.getBluetoothLeScanner();
         scanner.stopScan(this.scanCallback);
 
@@ -210,6 +214,11 @@ public class MyleBleService extends Service {
 
     public boolean isScanning() {
         return this.scanCallback != null;
+    }
+
+
+    public BluetoothDevice getConnectedTap() {
+        return (this.btGatt != null) ? this.btGatt.getDevice() : null;
     }
 
     public boolean isConnected() { return this.btGatt != null; }
@@ -239,13 +248,15 @@ public class MyleBleService extends Service {
         this.currentTapPassword = password;
 
         if (isConnected()) {
-            disconnectFromCurrentTap();
+            this.btGatt.disconnect();
+            this.btGatt.close();
+            this.btGatt = null;
         }
 
-        // NOTE: we want autoConnect parameter of connectGatt() to be true
-        // because for some reason during recording tap is getting disconnected with status 19
-        // so we would like it to be auto-connected once recording is done
-        boolean autoConnect = true;
+        // NOTE: we want autoConnect parameter of connectGatt() to be false
+        // because for some reason it i's much faster to connect to devices
+        // we reconnect right after disconnection by oursefls
+        boolean autoConnect = false;
         this.btGatt = tap.connectGatt(this.getApplication(), autoConnect, new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -275,6 +286,8 @@ public class MyleBleService extends Service {
                         intent.putExtra(Constant.TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM, gatt.getDevice().getAddress());
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     }
+
+                    startScan();
                 } else if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                     notifyOnTrace("Connected to tap " + gatt.getDevice().getAddress());
 

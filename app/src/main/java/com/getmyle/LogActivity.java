@@ -80,10 +80,6 @@ public class LogActivity extends Activity implements Observer {
                 TapManager.getInstance().disconnectFromCurrentTap();
                 break;
 
-            case R.id.action_forget_tap:
-                TapManager.getInstance().forgetCurrentTap();
-                break;
-
             case R.id.action_get_num_rev_audio:
                 //int num = mTapManager.getReceiveByteAudio();
                 //Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();

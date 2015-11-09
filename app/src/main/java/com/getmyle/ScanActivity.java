@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.getmyle.mylesdk.Constant;
 import com.getmyle.mylesdk.TapManager;
@@ -40,14 +41,10 @@ public class ScanActivity extends Activity {
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Collection<BluetoothDevice> taps = TapManager.getInstance().getAvailableTaps();
-            mListDevice.clear();
-            for (BluetoothDevice tap : taps) {
-                mListDevice.add(new MyleDevice(tap, TapManager.getInstance().getTapName(tap.getAddress())));
-            }
-            mAdapter.notifyDataSetChanged();
+            refreshList();
         }
     };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,14 +57,17 @@ public class ScanActivity extends Activity {
         mAdapter = new ScanAdapter(this, R.layout.scan_device_item, mListDevice);
         mListview.setAdapter(mAdapter);
 
-        final Activity me = this;
-
         mListview.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+                if (mAdapter.getItem(position).getDevice() == TapManager.getInstance().getConnectedTap()) {
+                    Toast.makeText(ScanActivity.this, "Already connected", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 String tapAddress = mAdapter.getItem(position).getDevice().getAddress();
 
-                PreferenceManager.getDefaultSharedPreferences(me)
+                PreferenceManager.getDefaultSharedPreferences(ScanActivity.this)
                         .edit()
                         .putString(AppConstants.PREF_ADDRESS, tapAddress)
                         .apply();
@@ -85,7 +85,7 @@ public class ScanActivity extends Activity {
     protected void onStart() {
         super.onStart();
 
-        TapManager.getInstance().startScan();
+        refreshList();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constant.TAP_NOTIFICATION_SCAN));
     }
@@ -95,49 +95,19 @@ public class ScanActivity extends Activity {
     protected void onStop() {
         super.onStop();
 
-        TapManager.getInstance().stopScan();
-
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.scan, menu);
-
-        updateScanMenuItem(menu.getItem(0));
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        if (item.getItemId() == R.id.action_scan) {
-            if (TapManager.getInstance().isScanning()) {
-                TapManager.getInstance().stopScan();
-            } else {
-                TapManager.getInstance().startScan();
-            }
-
-            updateScanMenuItem(item);
-
-            return true;
+    private void refreshList() {
+        Collection<BluetoothDevice> taps = TapManager.getInstance().getAvailableTaps();
+        mListDevice.clear();
+        BluetoothDevice connectedTap = TapManager.getInstance().getConnectedTap();
+        for (BluetoothDevice tap : taps) {
+            String name = TapManager.getInstance().getTapName(tap.getAddress()) + ((connectedTap == tap) ? " (connected)" : "");
+            mListDevice.add(new MyleDevice(tap, name));
         }
-
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void updateScanMenuItem(MenuItem menuItem) {
-        if (TapManager.getInstance().isScanning()) {
-            menuItem.setTitle(R.string.scan_ac_stop_scan);
-        } else {
-            menuItem.setTitle(R.string.scan_ac_start_scan);
-        }
+        mAdapter.notifyDataSetChanged();
     }
 
 }

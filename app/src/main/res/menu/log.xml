@@ -23,11 +23,6 @@
                 android:showAsAction="never"/>
 
             <item
-                android:id="@+id/action_forget_tap"
-                android:title="@string/log_ac_forget_tap"
-                android:showAsAction="never"/>
-
-            <item
                 android:id="@+id/action_clear"
                 android:title="@string/log_ac_clear_log"
                 android:showAsAction="never"/>
