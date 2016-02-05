@@ -1,21 +1,16 @@
 package com.getmyle;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v4.app.NavUtils;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.getmyle.mylesdk.MyleService;
 import com.getmyle.mylesdk.TapManager;
 
-import java.util.Calendar;
+import java.util.Observable;
+import java.util.Observer;
 
 /*
  * Display tasks log.
@@ -24,122 +19,66 @@ import java.util.Calendar;
  * @date: 03/30/2015
  */
 
-public class LogActivity extends Activity implements
-        TapManager.TapManagerListener, MyleService.MyleServiceListener {
-    private static final String TAG = "LogActivity";
-
-    public static final String INTENT_PARAM_UUID = "uuid";
-    public static final String INTENT_PARAM_PASS = "pass";
+public class LogActivity extends Activity implements Observer {
 
     private TextView tvLog;
-    private Menu mMenu;
-    private String mChoosenDeviceUUID;
-    private String mChoosenDevicePass;
-    private TapManager mTapManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-
-        mChoosenDeviceUUID = getIntent().getStringExtra(INTENT_PARAM_UUID);
-        mChoosenDevicePass = getIntent().getStringExtra(INTENT_PARAM_PASS);
-
         // TextView
         tvLog = (TextView) findViewById(R.id.tv_log);
 
         // Setup actionbar
         getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
-        getActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mTapManager = new TapManager(this);
-        mTapManager.setTapManagerListener(this);
+        tvLog.setText(MyleApplication.logObservable.getValue());
 
-        mTapManager.connectToService();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        mTapManager.stopScan();
+        // subscribe to log changes
+        MyleApplication.logObservable.addObserver(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        mTapManager.destroy();
+        MyleApplication.logObservable.deleteObserver(this);
     }
 
-    @Override
-    public void onServiceConnected() {
-        mTapManager.setMyleServiceListener(this);
-
-        if (TextUtils.isEmpty(mChoosenDeviceUUID)) {
-            mTapManager.startScan();
-        } else {
-            mTapManager.connectToDevice(mChoosenDeviceUUID, mChoosenDevicePass);
-        }
-    }
-
-    @Override
-    public void onServiceDisconnected() {
-        mTapManager.removeMyleServiceListener(this);
-    }
-
-    // Clear log
-    public void clickClearLog() {
-        tvLog.setText("");
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.log, menu);
-        mMenu = menu;
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
-
             case R.id.action_clear:
-                clickClearLog();
+                MyleApplication.logObservable.clear();
+                break;
+
+            case R.id.action_connect:
+                startActivity(new Intent(this, ScanActivity.class));
                 break;
 
             case R.id.action_parameter:
                 startActivity(new Intent(this, ParameterActivity.class));
                 break;
 
-            case R.id.action_forget_device:
-                mTapManager.forgetCurrentDevice();
-
-                Toast.makeText(this, "Forgot current device", Toast.LENGTH_LONG).show();
+            case R.id.action_disconnect:
+                TapManager.getInstance().disconnectFromCurrentTap();
                 break;
 
             case R.id.action_get_num_rev_audio:
-                int num = mTapManager.getReceiveByteAudio();
-                Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();
+                //int num = mTapManager.getReceiveByteAudio();
+                //Toast.makeText(this, num + " bytes", Toast.LENGTH_LONG).show();
                 break;
-
-            case android.R.id.home:
-                Intent upIntent = NavUtils.getParentActivityIntent(this);
-                upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(upIntent);
-                finish();
-                return true;
         }
 
 
@@ -147,16 +86,9 @@ public class LogActivity extends Activity implements
     }
 
     @Override
-    public void onFoundNewDevice(BluetoothDevice device, String deviceName) {
-    }
+    public void update(Observable observable, Object data) {
+        if (observable != MyleApplication.logObservable) { return; }
 
-    @Override
-    public void log(String log) {
-        Calendar c = Calendar.getInstance();
-        int seconds = c.get(Calendar.SECOND);
-        int minute = c.get(Calendar.MINUTE);
-        int hour = c.get(Calendar.HOUR_OF_DAY);
-
-        tvLog.append(hour + ":" + minute + ":" + seconds + ": " + log + "\n");
+        tvLog.setText(data.toString());
     }
 }

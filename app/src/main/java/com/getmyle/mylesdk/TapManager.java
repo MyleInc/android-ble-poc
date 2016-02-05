@@ -1,266 +1,223 @@
 package com.getmyle.mylesdk;
 
+import android.app.Application;
+import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
-import java.util.Locale;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 
+/**
+ * Created by mikalai on 2015-11-04.
+ */
 public class TapManager implements ServiceConnection {
 
-    private static final int SIZE_QUEUE = 10;
+    private static volatile TapManager instance;
 
-    private Context mContext;
-    private MyleService mMyleService;
-    private boolean mBounded;
-    private TapManagerListener mTapManagerListener;
-    private BlockingQueue<byte[]> mQueue = new ArrayBlockingQueue<byte[]>(SIZE_QUEUE);
-    private Thread mThread;
+    private Application app;
+    private MyleBleService service;
 
-    public TapManager(Context context) {
-        mContext = context;
+    private final CountDownLatch latch = new CountDownLatch(1);
+
+
+    TapManager(Application app) {
+        this.app = app;
     }
 
-    /**
-     * Need to call after creating an object of type TapManager
-     */
-    public void setTapManagerListener(TapManagerListener listener) {
-        mTapManagerListener = listener;
-    }
 
-    /**
-    * Need to call in onServiceConnected() and setup listener.
-    *
-    * @param listener This listener will be used for getting founded devices and logging actions.
-    */
-    public void setMyleServiceListener(MyleService.MyleServiceListener listener) {
-        mMyleService.addMyleServiceListener(listener);
-    }
-
-    /**
-     * Need to call in onServiceConnected().
-     *
-     * @param listener This listener will be used for reading data from devices.
-     */
-    public void setParameterListener(MyleService.ParameterListener listener) {
-        mMyleService.addParameterListener(listener);
-    }
-
-    /**
-     * Need to call in onServiceDisconnected() to delete the listener.
-     * This method should be used as pair with onServiceConnected().
-     *
-     * @param listener This listener will be deleted.
-     */
-    public void removeMyleServiceListener(MyleService.MyleServiceListener listener) {
-        mMyleService.removeMyleServiceListener(listener);
-    }
-
-    /**
-     * This method should be used as pair with setParameterListener().
-     *
-     * @param listener This listener will be deleted.
-     */
-    public void removeParameterListener(MyleService.ParameterListener listener) {
-        mMyleService.removeParameterListener(listener);
-    }
-
-    /**
-    * Need to call in Activity#onCreate() or Activity#onStart() or Activity#onResume().
-    * If connection is OK, the method onServiceConnected() will be called.
-    */
-    public void connectToService() {
-        Intent intent = new Intent(mContext, MyleService.class);
-        mContext.bindService(intent, this, Context.BIND_AUTO_CREATE);
-    }
-
-    /**
-     * Need to call in Activity#onPause() or Activity#onStop() or Activity#onDestroy()
-     */
-    public void destroy() {
-        mQueue.clear();
-
-        mMyleService.disconnect();
-
-        // Unbound service
-        if (mBounded) {
-            mContext.unbindService(this);
-            mBounded = false;
+    public static void setup(final Application app, final String address, final String password) throws Exception {
+        if (instance != null) {
+            throw new Exception("TapManager is already instanciated");
         }
 
-        mTapManagerListener = null;
+        synchronized (TapManager.class) {
+            if (instance != null) {
+                throw new Exception("TapManager is already instanciated");
+            }
+
+            instance = new TapManager(app);
+        }
+
+        // start Myle service
+        Intent intent = new Intent(app, MyleBleService.class);
+        intent.putExtra(MyleBleService.INTENT_PARAM_INIT_ADDRESS, address);
+        intent.putExtra(MyleBleService.INTENT_PARAM_INIT_PASSWORD, password);
+
+        // service is going to run infinitely in background
+        app.startService(intent);
+
+        // connect to service to get it's instance
+        app.bindService(intent, instance, 0);
     }
 
-    public void connectToDevice(String address, String password) {
-        mMyleService.connect(address, password);
+
+    public static TapManager getInstance() {
+        return instance;
     }
 
-    public void forgetCurrentDevice() {
-        mMyleService.forgetCurrentDevice();
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder binder) {
+        MyleBleService.LocalBinder localBinder = (MyleBleService.LocalBinder) binder;
+        this.service = localBinder.getServerInstance();
+        this.latch.countDown();
     }
 
-    public int getReceiveByteAudio() {
-        return mMyleService.getReceiveByteAudio();
-    }
 
-    public void stopScan() {
-        mMyleService.stopScan();
-    }
-
-    public void startScan() {
-        mMyleService.startScan();
-    }
-
-    public void sendWriteRECLN(String value) {
-        String temp = String.format(Locale.getDefault(), "%02d", Integer.parseInt(value));
-        String str = "5502RECLN" + temp;
-        Log.i("", str);
-
-        processRequests(str.getBytes());
-    }
-
-    public void sendWritePAUSELEVEL(String value) {
-        String temp = String.format(Locale.getDefault(), "%03d", Integer.parseInt(value));
-        String str = "5502PAUSELEVEL" + temp;
-
-        processRequests(str.getBytes());
-    }
-
-    public void sendWritePAUSELEN(String value) {
-        String temp = String.format(Locale.getDefault(), "%02d", Integer.parseInt(value));
-        String str = "5502PAUSELEN" + temp;
-
-        processRequests(str.getBytes());
-    }
-
-    public void sendWriteACCELERSENS(String value) {
-        String temp = String.format(Locale.getDefault(), "%03d", Integer.parseInt(value));
-        String str = "5502ACCELERSENS" + temp;
-
-        processRequests(str.getBytes());
-    }
-
-    public void sendWriteMIC(String value) {
-        String temp = String.format(Locale.getDefault(), "%03d", Integer.parseInt(value));
-        String str = "5502MIC" + temp;
-
-        processRequests(str.getBytes());
-    }
-
-    public void sendWriteBTLOC(String value) {
-        String temp = "5502BTLOC" + value;
-
-        processRequests(temp.getBytes());
-    }
-
-    public void sendWritePASSWORD(String value) {
-        byte[] a = new byte[]{'5', '5', '0', '2', 'P', 'A', 'S', 'S', (byte) value.length()};
-        byte[] b = value.getBytes();
-
-        byte[] c = new byte[a.length + b.length];
-        System.arraycopy(a, 0, c, 0, a.length);
-        System.arraycopy(b, 0, c, a.length, b.length);
-
-        processRequests(c);
-    }
-
-    public void sendReadRECLN() {
-        processRequests("5503RECLN".getBytes());
-    }
-
-    public void sendReadBTLOC() {
-        processRequests("5503BTLOC".getBytes());
-    }
-
-    public void sendReadPAUSELEVEL() {
-        processRequests("5503PAUSELEVEL".getBytes());
-    }
-
-    public void sendReadPAUSELEN() {
-        processRequests("5503PAUSELEN".getBytes());
-    }
-
-    public void sendReadACCELERSENS() {
-        processRequests("5503ACCELERSENS".getBytes());
-    }
-
-    public void sendReadMIC() {
-        processRequests("5503MIC".getBytes());
-    }
-
-    public void sendReadVERSION() {
-        processRequests("5503VERSION".getBytes());
-    }
-
-    public void sendReadBATTERY_LEVEL() {
-        mMyleService.requestBatteryLevelValue();
-    }
-
-    public void sendEnableBatteryNotification(){
-        mMyleService.enableBatteryLevelNotification();
-    }
-
-    // Not public interface
+    @Override
     public void onServiceDisconnected(ComponentName name) {
-        if (mTapManagerListener != null) {
-            mTapManagerListener.onServiceDisconnected();
-        }
-
-        mBounded = false;
-        mMyleService = null;
     }
 
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        mBounded = true;
-        MyleService.LocalBinder mLocalBinder = (MyleService.LocalBinder) service;
-        mMyleService = mLocalBinder.getServerInstance();
 
-        if (mTapManagerListener != null) {
-            mTapManagerListener.onServiceConnected();
+    /**
+     * NOTE: we wait for service to be available on current thread.
+     *
+     * @return
+     */
+    private MyleBleService getService() {
+        if (Looper.myLooper() == Looper.getMainLooper() && this.service == null) {
+            Log.e(TapManager.class.getName(), "You have to call your method in another thread in order to be executed once MyleBleService is bound.");
+        }
+        try {
+            this.latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return this.service;
+    }
+
+
+    public Collection<BluetoothDevice> getAvailableTaps() {
+        return getService().getAvailableTaps();
+    }
+
+
+    public String getTapName(String address) {
+        return getService().getTapName(address);
+    }
+
+
+    public void connectToTap(String address, String password) {
+        getService().connectToTap(address, password);
+    }
+
+
+    public void disconnectFromCurrentTap() {
+        getService().disconnectFromCurrentTap();
+    }
+
+
+    public BluetoothDevice getConnectedTap() {
+        return getService().getConnectedTap();
+    }
+
+
+    public void readRECLN() {
+        getService().readRECLN();
+    }
+
+    public void readBTLOC() {
+        getService().readBTLOC();
+    }
+
+    public void readPAUSELEVEL() {
+        getService().readPAUSELEVEL();
+    }
+
+    public void readPAUSELEN() {
+        getService().readPAUSELEN();
+    }
+
+    public void readACCELERSENS() {
+        getService().readACCELERSENS();
+    }
+
+    public void readMIC() {
+        getService().readMIC();
+    }
+
+    public void readVERSION() {
+        getService().readVERSION();
+    }
+
+    public void readUUID() {
+        getService().readUUID();
+    }
+
+    public void readBatteryLevel() {
+        getService().readBatteryLevel();
+    }
+
+
+    public void writeRECLN(int value) {
+        getService().writeRECLN(value);
+    }
+
+    public void writePAUSELEVEL(int value) {
+        getService().writePAUSELEVEL(value);
+    }
+
+    public void writePAUSELEN(int value) {
+        getService().writePAUSELEN(value);
+    }
+
+    public void writeACCELERSENS(int value) {
+        getService().writeACCELERSENS(value);
+    }
+
+    public void writeMIC(int value) {
+        getService().writeMIC(value);
+    }
+
+    public void writeBTLOC(int value) {
+        getService().writeBTLOC(value);
+    }
+
+    public void writePASSWORD(String value) {
+        getService().writePASSWORD(value);
+    }
+
+
+    public void addCharacteristicValueListener(CharacteristicValueListener listener) {
+        getService().addCharacteristicValueListener(listener);
+    }
+
+
+    public void removeCharacteristicValueListener(CharacteristicValueListener listener) {
+        getService().removeCharacteristicValueListener(listener);
+    }
+
+
+    public void addTraceListener(TraceListener listener) {
+        getService().addTraceListener(listener);
+    }
+
+
+    public void removeTraceListener(TraceListener listener) {
+        getService().removeTraceListener(listener);
+    }
+
+
+    public static abstract class CharacteristicValueListener {
+        public void onIntValue(String param, int value) {
+        }
+
+        public void onStringValue(String param, String value) {
+        }
+
+        public void onBatteryLevel(int value) {
         }
     }
 
-    // Helper methods
-    //
-    // This method supports a queue of requests and runs each request after some delay
-    private void processRequests(byte[] request) {
-        if (mQueue.size() == SIZE_QUEUE) {
-            return;
+
+    public static abstract class TraceListener {
+        public void onTrace(String msg) {
         }
-
-        mQueue.add(request);
-
-        if ((mThread == null) || (!mThread.isAlive())) {
-            mThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // Is there any elements in the queue?
-                    while (mQueue.peek() != null) {
-                        // Take an element and process it
-                        try {
-                            mMyleService.send(mQueue.take());
-
-                            // This delay need to send sequences of requests
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                        }
-                    }
-                }
-            });
-
-            mThread.start();
-        }
-    }
-
-    public interface TapManagerListener {
-        void onServiceConnected();
-
-        void onServiceDisconnected();
     }
 
 }

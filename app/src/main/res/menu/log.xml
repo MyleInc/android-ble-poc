@@ -7,8 +7,8 @@
 
         <menu>
             <item
-                android:id="@+id/action_clear"
-                android:title="@string/log_ac_clear_log"
+                android:id="@+id/action_connect"
+                android:title="@string/log_ac_connect"
                 android:showAsAction="never"/>
 
             <item
@@ -18,8 +18,13 @@
                 android:showAsAction="never"/>
 
             <item
-                android:id="@+id/action_forget_device"
-                android:title="@string/log_ac_forget_device"
+                android:id="@+id/action_disconnect"
+                android:title="@string/log_ac_disconnect"
+                android:showAsAction="never"/>
+
+            <item
+                android:id="@+id/action_clear"
+                android:title="@string/log_ac_clear_log"
                 android:showAsAction="never"/>
 
             <item
