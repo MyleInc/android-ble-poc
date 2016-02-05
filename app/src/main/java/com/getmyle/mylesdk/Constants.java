@@ -57,8 +57,9 @@ public interface Constants {
     String TAP_NOTIFICATION_TAP_DISCONNECTED_PARAM = "tap-notification-tap-disconnected-param";
 
     // send file is received
-    String TAP_NOTIFICATION_FILE_RECEIVED = "tap-notification-file-received";
-    String TAP_NOTIFICATION_FILE_RECEIVED_PARAM = "tap-notification-file-received-param";
+    String TAP_NOTIFICATION_FILE = "tap-notification-file";
+    String TAP_NOTIFICATION_FILE_PATH_PARAM = "tap-notification-file-path-param";
+    String TAP_NOTIFICATION_FILE_TIME_PARAM = "tap-notification-file-time-param";
 
 
     byte[] MESSAGE_CONNECTED = "CONNECTED".getBytes();

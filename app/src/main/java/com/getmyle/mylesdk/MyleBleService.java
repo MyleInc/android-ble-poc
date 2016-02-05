@@ -23,7 +23,6 @@ import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -126,7 +125,7 @@ public class MyleBleService extends Service {
         this.currentTapAddress = intent.getStringExtra(INTENT_PARAM_INIT_ADDRESS);
         this.currentTapPassword = intent.getStringExtra(INTENT_PARAM_INIT_PASSWORD);
 
-        return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
 
@@ -146,16 +145,16 @@ public class MyleBleService extends Service {
 
 
     public void startScan() {
-        if (this.isScanning()) {
+        BluetoothLeScanner scanner = null;
+        if ((this.isScanning()) || ((scanner = this.btAdapter.getBluetoothLeScanner()) == null)) {
             return;
         }
 
         this.availableTaps.clear();
         this.availableTapNames.clear();
 
-        BluetoothLeScanner scanner = this.btAdapter.getBluetoothLeScanner();
         ScanSettings settings = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
                 .build();
         List<ScanFilter> filters = new ArrayList<>();
 
@@ -203,11 +202,11 @@ public class MyleBleService extends Service {
 
 
     public void stopScan() {
-        if (!this.isScanning()) {
+        BluetoothLeScanner scanner = null;
+        if ((!this.isScanning()) || ((scanner = this.btAdapter.getBluetoothLeScanner()) == null)) {
             return;
         }
 
-        BluetoothLeScanner scanner = this.btAdapter.getBluetoothLeScanner();
         scanner.stopScan(this.scanCallback);
 
         this.scanCallback = null;
@@ -378,8 +377,9 @@ public class MyleBleService extends Service {
                                 notifyOnTrace("The file is written to " + absolutePath);
 
                                 // notify about connected tap
-                                Intent intent = new Intent(Constants.TAP_NOTIFICATION_FILE_RECEIVED);
-                                intent.putExtra(Constants.TAP_NOTIFICATION_FILE_RECEIVED_PARAM, absolutePath);
+                                Intent intent = new Intent(Constants.TAP_NOTIFICATION_FILE);
+                                intent.putExtra(Constants.TAP_NOTIFICATION_FILE_PATH_PARAM, absolutePath);
+                                intent.putExtra(Constants.TAP_NOTIFICATION_FILE_TIME_PARAM, time.getTime());
                                 LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                             }
                         });
