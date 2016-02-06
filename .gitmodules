@@ -1,0 +1,3 @@
+[submodule "libs/myle-ble"]
+	path = libs/myle-ble
+	url = https://github.com/MyleInc/ble-android.git

@@ -1,1 +1,2 @@
-include ':app'
+include ':app', ':myle-ble'
+project(':myle-ble').projectDir = new File('libs/myle-ble')

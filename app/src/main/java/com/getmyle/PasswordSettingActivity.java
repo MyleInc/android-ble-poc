@@ -1,15 +1,13 @@
 package com.getmyle;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 
 import com.getmyle.mylesdk.TapManager;
-
-import java.util.UUID;
 
 /*
  * Show password.
@@ -18,7 +16,7 @@ import java.util.UUID;
  * @date: 03/30/2015
  */
 
-public class PasswordSettingActivity extends Activity {
+public class PasswordSettingActivity extends AppCompatActivity {
 
     public static final String INTENT_PARAM_UUID = "uuid";
 
@@ -30,7 +28,7 @@ public class PasswordSettingActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_passwordsetting);
-        getActionBar().setTitle(getResources().getString(R.string.passwordsetting_ac_actionbar_title));
+        getSupportActionBar().setTitle(getResources().getString(R.string.passwordsetting_ac_actionbar_title));
 
         mTapUUID = getIntent().getStringExtra(PasswordSettingActivity.INTENT_PARAM_UUID);
 

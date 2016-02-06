@@ -1,8 +1,8 @@
 package com.getmyle;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -19,7 +19,7 @@ import java.util.Observer;
  * @date: 03/30/2015
  */
 
-public class LogActivity extends Activity implements Observer {
+public class LogActivity extends AppCompatActivity implements Observer {
 
     private TextView tvLog;
 
@@ -33,7 +33,7 @@ public class LogActivity extends Activity implements Observer {
         tvLog = (TextView) findViewById(R.id.tv_log);
 
         // Setup actionbar
-        getActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
+        getSupportActionBar().setTitle(getResources().getString(R.string.log_ac_actionbar_title));
 
         tvLog.setText(MyleApplication.logObservable.getValue());
 
