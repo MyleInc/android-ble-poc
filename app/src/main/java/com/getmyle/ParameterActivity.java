@@ -1,9 +1,9 @@
 package com.getmyle;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -19,7 +19,7 @@ import com.getmyle.mylesdk.TapManager;
  * @date: 03/30/2015
  */
 
-public class ParameterActivity extends Activity {
+public class ParameterActivity extends AppCompatActivity {
 
     private EditText mEdRECLN, mEdPAUSELEVEL,
             mEdPAUSELEN, mEdACCELERSENS,
@@ -66,8 +66,8 @@ public class ParameterActivity extends Activity {
 
         setContentView(R.layout.activity_parameter);
 
-        getActionBar().setTitle("Parameter");
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Parameter");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mEdRECLN = (EditText) findViewById(R.id.ed_recln);
         mEdPAUSELEVEL = (EditText) findViewById(R.id.ed_pause_level);

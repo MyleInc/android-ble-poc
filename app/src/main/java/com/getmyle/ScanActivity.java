@@ -1,6 +1,5 @@
 package com.getmyle;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,6 +8,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -28,7 +28,7 @@ import java.util.Collection;
  * @date: 03/30/2015
  */
 
-public class ScanActivity extends Activity {
+public class ScanActivity extends AppCompatActivity {
     private static final String TAG = "ScanActivity";
 
     private ListView mListview;
@@ -48,7 +48,7 @@ public class ScanActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan);
 
-        getActionBar().setTitle(getResources().getString(R.string.scan_ac_actionbar_title));
+        getSupportActionBar().setTitle(getResources().getString(R.string.scan_ac_actionbar_title));
 
         mListview = (ListView) findViewById(R.id.lv_scan_device);
         mAdapter = new ScanAdapter(this, R.layout.scan_device_item, mListDevice);

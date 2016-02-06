@@ -1,37 +1,30 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:icon="@drawable/ic_action_overflow"
-        android:title=""
-        android:showAsAction="always">
+        android:id="@+id/action_connect"
+        android:title="@string/log_ac_connect"
+        app:showAsAction="never"/>
 
-        <menu>
-            <item
-                android:id="@+id/action_connect"
-                android:title="@string/log_ac_connect"
-                android:showAsAction="never"/>
+    <item
+        android:id="@+id/action_parameter"
+        android:enabled="true"
+        android:title="@string/log_ac_parameter"
+        app:showAsAction="never"/>
 
-            <item
-                android:id="@+id/action_parameter"
-                android:enabled="true"
-                android:title="@string/log_ac_parameter"
-                android:showAsAction="never"/>
+    <item
+        android:id="@+id/action_disconnect"
+        android:title="@string/log_ac_disconnect"
+        app:showAsAction="never"/>
 
-            <item
-                android:id="@+id/action_disconnect"
-                android:title="@string/log_ac_disconnect"
-                android:showAsAction="never"/>
+    <item
+        android:id="@+id/action_clear"
+        android:title="@string/log_ac_clear_log"
+        app:showAsAction="never"/>
 
-            <item
-                android:id="@+id/action_clear"
-                android:title="@string/log_ac_clear_log"
-                android:showAsAction="never"/>
+    <item
+        android:id="@+id/action_get_num_rev_audio"
+        android:title="Get received audio byte"
+        app:showAsAction="never"/>
 
-            <item
-                android:id="@+id/action_get_num_rev_audio"
-                android:title="Get received audio byte"
-                android:showAsAction="never"/>
-        </menu>
-
-    </item>
 </menu>

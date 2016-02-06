@@ -1,8 +1,9 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
-   	<item
+    <item
         android:id="@+id/action_scan"
         android:title="@string/scan_ac_stop_scan"
-        android:showAsAction="always"/>
+        app:showAsAction="always"/>
 
 </menu>
