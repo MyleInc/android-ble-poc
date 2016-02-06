@@ -115,8 +115,6 @@ public class MyleBleService extends Service {
             enableBtIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(enableBtIntent);
         }
-
-        this.startScan();
     }
 
 
@@ -124,6 +122,12 @@ public class MyleBleService extends Service {
     public int onStartCommand(Intent intent, int flags, int startID) {
         this.currentTapAddress = intent.getStringExtra(INTENT_PARAM_INIT_ADDRESS);
         this.currentTapPassword = intent.getStringExtra(INTENT_PARAM_INIT_PASSWORD);
+
+        // when there is information about last connected TAP and we are not connected to anything else
+        // then start scan and try to auto-connect
+        if (this.currentTapAddress != null && !this.isConnected()) {
+            this.startScan(ScanSettings.SCAN_MODE_LOW_POWER);
+        }
 
         return START_REDELIVER_INTENT;
     }
@@ -144,7 +148,7 @@ public class MyleBleService extends Service {
     }
 
 
-    public void startScan() {
+    public void startScan(int scanMode) {
         BluetoothLeScanner scanner = null;
         if ((this.isScanning()) || ((scanner = this.btAdapter.getBluetoothLeScanner()) == null)) {
             return;
@@ -154,7 +158,7 @@ public class MyleBleService extends Service {
         this.availableTapNames.clear();
 
         ScanSettings settings = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                .setScanMode(scanMode)
                 .build();
         List<ScanFilter> filters = new ArrayList<>();
 
@@ -292,7 +296,11 @@ public class MyleBleService extends Service {
                         LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(intent);
                     }
 
-                    startScan();
+                    // if we are not intentionally disconnected, try to connect to TAP next time it's available
+                    if (status != BluetoothGatt.GATT_SUCCESS) {
+                        // connect to the TAP once it's available again
+                        connectToTap(address, password);
+                    }
                 } else if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                     notifyOnTrace("Connected to tap " + gatt.getDevice().getAddress());
 

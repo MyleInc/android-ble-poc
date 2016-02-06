@@ -2,6 +2,7 @@ package com.getmyle.mylesdk;
 
 import android.app.Application;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanSettings;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -200,6 +201,19 @@ public class TapManager implements ServiceConnection {
 
     public void removeTraceListener(TraceListener listener) {
         getService().removeTraceListener(listener);
+    }
+
+
+    public void startScan() {
+        // scan not worrying for battery,
+        // the method supposed to be used only durig foreground
+        // in TAP connection UI
+        getService().startScan(ScanSettings.SCAN_MODE_LOW_LATENCY);
+    }
+
+
+    public void stopScan() {
+        getService().stopScan();
     }
 
 
