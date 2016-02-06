@@ -85,12 +85,16 @@ public class ScanActivity extends Activity {
         refreshList();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(Constants.TAP_NOTIFICATION_SCAN));
+
+        TapManager.getInstance().startScan();
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
+
+        TapManager.getInstance().stopScan();
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
